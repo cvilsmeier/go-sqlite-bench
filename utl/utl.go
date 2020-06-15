@@ -5,14 +5,15 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 )
 
 var (
-	// users
+	// benchSimple
 	SqlCreateUsers = "CREATE TABLE users (id INTEGER PRIMARY KEY NOT NULL, name VARCHAR, age INTEGER, rating REAL)"
 	SqlInsertUsers = "INSERT INTO users (id, name, age, rating) VALUES (?, ?, ?, ?)"
 	SqlSelectUsers = "SELECT id, name, age, rating FROM users ORDER BY id"
-	// complex schema
+	// benchComplex
 	SqlCreateComplex = []string{
 		"PRAGMA foreign_keys=1",
 		"CREATE TABLE profiles (id VARCHAR PRIMARY KEY NOT NULL, name VARCHAR NOT NULL, active BOOL NOT NULL)",
@@ -39,22 +40,36 @@ var (
 		"LEFT JOIN profiles ON profiles.id = devices.profileId " +
 		"WHERE locations.active = ? OR locations.active = ? " +
 		"ORDER BY locations.name, locations.id, devices.name, devices.id, profiles.name, profiles.id"
-	// concurrent
+	// benchMany
+	SqlCreateCars = "CREATE TABLE cars (id INTEGER PRIMARY KEY NOT NULL, company VARCHAR, model VARCHAR)"
+	SqlInsertCars = "INSERT INTO cars (id, company, model) VALUES (?, ?, ?)"
+	SqlSelectCars = "SELECT id, company, model FROM cars ORDER BY id"
+	// benchLarge
+	SqlCreatePlants = "CREATE TABLE plants (id INTEGER PRIMARY KEY NOT NULL, name VARCHAR)"
+	SqlInsertPlants = "INSERT INTO plants (id, name) VALUES (?, ?)"
+	SqlSelectPlants = "SELECT id, name FROM plants ORDER BY id"
+	// benchConcurrent
 	SqlCreateBooks = "CREATE TABLE books (id INTEGER PRIMARY KEY NOT NULL, name VARCHAR)"
 	SqlInsertBooks = "INSERT INTO books (id,name) VALUES (?,?)"
 	SqlSelectBooks = "SELECT id, name FROM books ORDER BY id"
 )
 
 var (
-	Dbfile = ":memory:"
+	Nusers           = 1000 * 1000             // benchSimple
+	Nprofiles        = 200                     // benchComplex
+	Ndevices         = 100                     // benchComplex
+	Nlocations       = 10                      // benchComplex
+	NcarCounts       = []int{10, 100, 1000}    // benchMany
+	NcarQueries      = 1000                    // benchMany
+	Nplants          = 500                     // benchLarge
+	NplantQueries    = 100                     // benchLarge
+	PlantNameLengths = []int{2000, 4000, 8000} // benchLarge
+	Nbooks           = 1000 * 1000             // benchConcurrent
+	Ngoroutines      = []int{2, 4, 8}          // benchConcurrent
 )
 
 var (
-	Nusers     = 1000 * 1000
-	Nprofiles  = 200
-	Ndevices   = 100
-	Nlocations = 10
-	Nbooks     = 1000 * 1000
+	Dbfile = "./sqinn-go-bench.db"
 )
 
 func ParseFlags() {
@@ -63,14 +78,33 @@ func ParseFlags() {
 }
 
 func Remove(dbfile string) {
+	if dbfile == "" {
+		return
+	}
 	if strings.Contains(dbfile, ":memory:") {
 		return
 	}
 	// best effort, ignore errors
-	os.Remove(dbfile)
-	os.Remove(dbfile + "-journal")
-	os.Remove(dbfile + "-wal")
-	os.Remove(dbfile + "-shm")
+	err := os.Remove(dbfile)
+	if err != nil && !os.IsNotExist(err) {
+		panic(err)
+	}
+	err = os.Remove(dbfile + "-journal")
+	if err != nil && !os.IsNotExist(err) {
+		panic(err)
+	}
+	err = os.Remove(dbfile + "-wal")
+	if err != nil && !os.IsNotExist(err) {
+		panic(err)
+	}
+	err = os.Remove(dbfile + "-shm")
+	if err != nil && !os.IsNotExist(err) {
+		panic(err)
+	}
+}
+
+func Since(t time.Time) string {
+	return fmt.Sprintf("%d ms", time.Since(t).Milliseconds())
 }
 
 func Fsize(name string) string {

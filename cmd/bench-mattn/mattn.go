@@ -17,17 +17,31 @@ func check(err error) {
 	}
 }
 
-func benchSimple(dbfile string, nusers int) {
-	log.Printf("benchSimple dbfile=%s, nusers=%d", dbfile, nusers)
+func openPrepare(dbfile string, clearDbfile bool, sqls []string) *sql.DB {
 	// make sure db doesn't exist
-	utl.Remove(dbfile)
+	if clearDbfile {
+		utl.Remove(dbfile)
+	}
 	// open db
 	db, err := sql.Open("sqlite3", dbfile)
 	check(err)
-	defer db.Close()
 	// prepare schema
-	_, err = db.Exec(utl.SqlCreateUsers)
+	for _, s := range sqls {
+		_, err = db.Exec(s)
+		check(err)
+	}
+	return db
+}
+
+func closeDb(db *sql.DB) {
+	err := db.Close()
 	check(err)
+}
+
+func benchSimple(dbfile string, nusers int) {
+	log.Printf("benchSimple dbfile=%s, nusers=%d", dbfile, nusers)
+	db := openPrepare(dbfile, true, []string{utl.SqlCreateUsers})
+	defer closeDb(db)
 	// insert users
 	tstart := time.Now()
 	tx, err := db.Begin()
@@ -46,7 +60,7 @@ func benchSimple(dbfile string, nusers int) {
 	check(err)
 	err = tx.Commit()
 	check(err)
-	log.Printf("  insert took %s", time.Since(tstart))
+	log.Printf("  insert took %s", utl.Since(tstart))
 	// query users
 	tstart = time.Now()
 	rows, err := db.Query(utl.SqlSelectUsers)
@@ -67,23 +81,14 @@ func benchSimple(dbfile string, nusers int) {
 	if nrows != nusers {
 		log.Fatalf("expected %v rows but was %v", nusers, nrows)
 	}
-	log.Printf("  query took %s", time.Since(tstart))
+	log.Printf("  query took %s", utl.Since(tstart))
 	log.Printf("  fsize %v", utl.Fsize(dbfile))
 }
 
 func benchComplex(dbfile string, nprofiles, ndevices, nlocations int) {
 	log.Printf("benchComplex dbfile=%s, nprofiles, ndevices, nlocations = %d, %d, %d", dbfile, nprofiles, ndevices, nlocations)
-	// make sure db doesn't exist
-	utl.Remove(dbfile)
-	// open db
-	db, err := sql.Open("sqlite3", dbfile)
-	check(err)
-	defer db.Close()
-	// prepare schema
-	for _, qu := range utl.SqlCreateComplex {
-		_, err = db.Exec(qu)
-		check(err)
-	}
+	db := openPrepare(dbfile, true, utl.SqlCreateComplex)
+	defer closeDb(db)
 	// insert profiles
 	tstart := time.Now()
 	tx, err := db.Begin()
@@ -141,7 +146,7 @@ func benchComplex(dbfile string, nprofiles, ndevices, nlocations int) {
 	check(err)
 	err = tx.Commit()
 	check(err)
-	log.Printf("  insert took %s", time.Since(tstart))
+	log.Printf("  insert took %s", utl.Since(tstart))
 	// query
 	tstart = time.Now()
 	rows, err := db.Query(utl.SqlSelectComplex, 0, 1)
@@ -188,21 +193,103 @@ func benchComplex(dbfile string, nprofiles, ndevices, nlocations int) {
 		log.Fatalf("expected %v rows but was %v", expectedRows, nrows)
 	}
 	// done
-	log.Printf("  query took %s", time.Since(tstart))
+	log.Printf("  query took %s", utl.Since(tstart))
+	log.Printf("  fsize %v", utl.Fsize(dbfile))
+}
+
+func benchMany(dbfile string, ncars, nqueries int) {
+	log.Printf("benchMany dbfile=%s, ncars=%d, nqueries=%d", dbfile, ncars, nqueries)
+	db := openPrepare(dbfile, true, []string{utl.SqlCreateCars})
+	defer closeDb(db)
+	// insert
+	tx, err := db.Begin()
+	check(err)
+	stmt, err := tx.Prepare(utl.SqlInsertCars)
+	check(err)
+	for i := 0; i < ncars; i++ {
+		id := i + 1
+		company := fmt.Sprintf("Company %d", id)
+		model := fmt.Sprintf("Model %d", id)
+		_, err = stmt.Exec(id, company, model)
+		check(err)
+	}
+	err = stmt.Close()
+	check(err)
+	err = tx.Commit()
+	check(err)
+	// queries
+	tstart := time.Now()
+	for i := 0; i < nqueries; i++ {
+		rows, err := db.Query(utl.SqlSelectCars)
+		check(err)
+		nrows := 0
+		var id sql.NullInt32
+		var company sql.NullString
+		var model sql.NullString
+		for rows.Next() {
+			nrows++
+			rows.Scan(&id, &company, &model)
+			if id.Int32 < 1 || len(company.String) < 5 || len(model.String) < 5 {
+				log.Fatal("wrong row values")
+			}
+		}
+		if nrows != ncars {
+			log.Fatalf("expected %v rows but was %v", ncars, nrows)
+		}
+	}
+	log.Printf("  queries took %s", utl.Since(tstart))
+	log.Printf("  fsize %v", utl.Fsize(dbfile))
+}
+
+func benchLarge(dbfile string, nplants, nqueries, nameLength int) {
+	log.Printf("benchLarge dbfile=%s, nplants=%d, nqueries=%d, nameLength=%d", dbfile, nplants, nqueries, nameLength)
+	db := openPrepare(dbfile, true, []string{utl.SqlCreatePlants})
+	defer closeDb(db)
+	// insert
+	name := ""
+	for len(name) < nameLength {
+		name = name + "Name "
+	}
+	tx, err := db.Begin()
+	check(err)
+	stmt, err := tx.Prepare(utl.SqlInsertPlants)
+	check(err)
+	for i := 0; i < nplants; i++ {
+		id := i + 1
+		_, err = stmt.Exec(id, name)
+		check(err)
+	}
+	err = stmt.Close()
+	check(err)
+	err = tx.Commit()
+	check(err)
+	// queries
+	tstart := time.Now()
+	for i := 0; i < nqueries; i++ {
+		rows, err := db.Query(utl.SqlSelectPlants)
+		check(err)
+		nrows := 0
+		var id sql.NullInt32
+		var name sql.NullString
+		for rows.Next() {
+			nrows++
+			rows.Scan(&id, &name)
+			if id.Int32 < 1 || len(name.String) < nameLength {
+				log.Fatal("wrong row values")
+			}
+		}
+		if nrows != nplants {
+			log.Fatalf("expected %v rows but was %v", nplants, nrows)
+		}
+	}
+	log.Printf("  queries took %s", utl.Since(tstart))
 	log.Printf("  fsize %v", utl.Fsize(dbfile))
 }
 
 func benchConcurrent(dbfile string, nbooks, nworkers int) {
 	log.Printf("benchConcurrent dbfile=%s, nbooks=%d, nworkers=%d", dbfile, nbooks, nworkers)
-	// make sure db doesn't exist
-	utl.Remove(dbfile)
-	// open db
-	db, err := sql.Open("sqlite3", dbfile)
-	check(err)
-	defer db.Close()
-	// prepare schema
-	_, err = db.Exec(utl.SqlCreateBooks)
-	check(err)
+	db := openPrepare(dbfile, true, []string{utl.SqlCreateBooks})
+	defer closeDb(db)
 	// insert
 	tx, err := db.Begin()
 	check(err)
@@ -225,11 +312,8 @@ func benchConcurrent(dbfile string, nbooks, nworkers int) {
 	for w := 0; w < nworkers; w++ {
 		go func(w int) {
 			defer wg.Done()
-			// log.Printf("  worker %v start", w)
-			// defer log.Printf("  worker %v end", w)
-			db, err := sql.Open("sqlite3", dbfile)
-			check(err)
-			defer db.Close()
+			db := openPrepare(dbfile, false, nil)
+			defer closeDb(db)
 			rows, err := db.Query(utl.SqlSelectBooks)
 			if err != nil {
 				log.Fatalf("worker %v: %v", w, err)
@@ -250,7 +334,7 @@ func benchConcurrent(dbfile string, nbooks, nworkers int) {
 		}(w)
 	}
 	wg.Wait()
-	log.Printf("  queries took %s", time.Since(tstart))
+	log.Printf("  queries took %s", utl.Since(tstart))
 	log.Printf("  fsize %v", utl.Fsize(dbfile))
 }
 
@@ -259,7 +343,13 @@ func main() {
 	utl.ParseFlags()
 	benchSimple(utl.Dbfile, utl.Nusers)
 	benchComplex(utl.Dbfile, utl.Nprofiles, utl.Ndevices, utl.Nlocations)
-	benchConcurrent(utl.Dbfile, utl.Nbooks, 2)
-	benchConcurrent(utl.Dbfile, utl.Nbooks, 4)
-	benchConcurrent(utl.Dbfile, utl.Nbooks, 8)
+	for _, n := range utl.NcarCounts {
+		benchMany(utl.Dbfile, n, utl.NcarQueries)
+	}
+	for _, n := range utl.PlantNameLengths {
+		benchLarge(utl.Dbfile, utl.Nplants, utl.NplantQueries, n)
+	}
+	for _, n := range utl.Ngoroutines {
+		benchConcurrent(utl.Dbfile, utl.Nbooks, n)
+	}
 }

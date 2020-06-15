@@ -20,10 +20,11 @@ func check(err error) {
 	}
 }
 
-func benchSimple(sqinnPath, dbfile string, nusers int) {
-	log.Printf("benchSimple dbfile=%s, nusers=%d", dbfile, nusers)
+func launchOpenPrepare(sqinnPath, dbfile string, clearDbfile bool, sqls []string) *sqinn.Sqinn {
 	// make sure db doesn't exist
-	utl.Remove(dbfile)
+	if clearDbfile {
+		utl.Remove(dbfile)
+	}
 	// launch sqinn
 	sq, err := sqinn.Launch(sqinn.Options{
 		SqinnPath: sqinnPath,
@@ -32,12 +33,29 @@ func benchSimple(sqinnPath, dbfile string, nusers int) {
 	// open db
 	err = sq.Open(dbfile)
 	check(err)
-	// prepare schema
-	_, err = sq.ExecOne(utl.SqlCreateUsers)
+	// run sqls, if any
+	for _, sql := range sqls {
+		_, err = sq.ExecOne(sql)
+		check(err)
+	}
+	return sq
+}
+
+func closeAndTerminate(sq *sqinn.Sqinn) {
+	err := sq.Close()
 	check(err)
+	err = sq.Terminate()
+	check(err)
+}
+
+func benchSimple(sqinnPath, dbfile string, nusers int) {
+	log.Printf("benchSimple dbfile=%s, nusers=%d", dbfile, nusers)
+	// start sqinn
+	sq := launchOpenPrepare(sqinnPath, dbfile, true, []string{utl.SqlCreateUsers})
+	defer closeAndTerminate(sq)
 	// insert users
 	tstart := time.Now()
-	_, err = sq.ExecOne("BEGIN")
+	_, err := sq.ExecOne("BEGIN")
 	check(err)
 	values := make([]interface{}, 0, nusers*4)
 	for i := 0; i < nusers; i++ {
@@ -51,7 +69,7 @@ func benchSimple(sqinnPath, dbfile string, nusers int) {
 	check(err)
 	_, err = sq.ExecOne("COMMIT")
 	check(err)
-	log.Printf("  insert took %s", time.Since(tstart))
+	log.Printf("  insert took %s", utl.Since(tstart))
 	tstart = time.Now()
 	// query users
 	colTypes := []byte{sqinn.ValInt, sqinn.ValText, sqinn.ValInt, sqinn.ValDouble}
@@ -69,36 +87,18 @@ func benchSimple(sqinnPath, dbfile string, nusers int) {
 			log.Fatal("wrong row values")
 		}
 	}
-	log.Printf("  query took %s", time.Since(tstart))
-	// close db
-	err = sq.Close()
-	check(err)
-	// terminate sqinn
-	err = sq.Terminate()
-	check(err)
+	log.Printf("  query took %s", utl.Since(tstart))
 	log.Printf("  fsize %v", utl.Fsize(dbfile))
 }
 
 func benchComplex(sqinnPath, dbfile string, nprofiles, ndevices, nlocations int) {
 	log.Printf("benchComplex dbfile=%s, nprofiles, ndevices, nlocations = %d, %d, %d", dbfile, nprofiles, ndevices, nlocations)
-	// make sure db doesn't exist
-	utl.Remove(dbfile)
-	// launch sqinn
-	sq, err := sqinn.Launch(sqinn.Options{
-		SqinnPath: sqinnPath,
-	})
-	check(err)
-	// open db
-	err = sq.Open(dbfile)
-	check(err)
-	// prepare schema
-	for _, sql := range utl.SqlCreateComplex {
-		_, err = sq.ExecOne(sql)
-		check(err)
-	}
+	// start sqinn
+	sq := launchOpenPrepare(sqinnPath, dbfile, true, utl.SqlCreateComplex)
+	defer closeAndTerminate(sq)
 	// insert profiles
 	tstart := time.Now()
-	_, err = sq.ExecOne("BEGIN")
+	_, err := sq.ExecOne("BEGIN")
 	check(err)
 	values := make([]interface{}, 0, nprofiles*3)
 	for p := 0; p < nprofiles; p++ {
@@ -147,7 +147,7 @@ func benchComplex(sqinnPath, dbfile string, nprofiles, ndevices, nlocations int)
 	check(err)
 	_, err = sq.Exec("COMMIT", 1, 0, nil)
 	check(err)
-	log.Printf("  insert took %s", time.Since(tstart))
+	log.Printf("  insert took %s", utl.Since(tstart))
 	// query
 	tstart = time.Now()
 	rows, err := sq.Query(utl.SqlSelectComplex, []interface{}{0, 1}, []byte{sqinn.ValText, sqinn.ValText, sqinn.ValText, sqinn.ValInt, sqinn.ValText, sqinn.ValText, sqinn.ValText, sqinn.ValInt, sqinn.ValText, sqinn.ValText, sqinn.ValInt})
@@ -178,34 +178,103 @@ func benchComplex(sqinnPath, dbfile string, nprofiles, ndevices, nlocations int)
 			log.Fatalf("wrong row values")
 		}
 	}
-	log.Printf("  query took %s", time.Since(tstart))
+	log.Printf("  query took %s", utl.Since(tstart))
 	// close and terminate
-	err = sq.Close()
+	log.Printf("  fsize %v", utl.Fsize(dbfile))
+}
+
+func benchMany(sqinnPath, dbfile string, ncars, nqueries int) {
+	log.Printf("benchMany dbfile=%s, ncars=%d, nqueries=%d", dbfile, ncars, nqueries)
+	// start sqinn
+	sq := launchOpenPrepare(sqinnPath, dbfile, true, []string{utl.SqlCreateCars})
+	defer closeAndTerminate(sq)
+	// insert cars
+	_, err := sq.ExecOne("BEGIN")
 	check(err)
-	err = sq.Terminate()
+	fieldsPerCar := 3 // id, company, model
+	values := make([]interface{}, 0, ncars*fieldsPerCar)
+	for i := 0; i < ncars; i++ {
+		id := i + 1
+		company := fmt.Sprintf("Company %d", id)
+		model := fmt.Sprintf("Model %d", id)
+		values = append(values, id, company, model)
+	}
+	_, err = sq.Exec(utl.SqlInsertCars, ncars, fieldsPerCar, values)
 	check(err)
+	_, err = sq.ExecOne("COMMIT")
+	check(err)
+	// queries
+	tstart := time.Now()
+	for i := 0; i < nqueries; i++ {
+		colTypes := []byte{sqinn.ValInt, sqinn.ValText, sqinn.ValText}
+		rows, err := sq.Query(utl.SqlSelectCars, nil, colTypes)
+		check(err)
+		if len(rows) != ncars {
+			log.Fatalf("want %v rows but was %v", ncars, len(rows))
+		}
+		for _, row := range rows {
+			id := row.Values[0].Int.Value
+			company := row.Values[1].String.Value
+			model := row.Values[2].String.Value
+			if id < 1 || len(company) < 5 || len(model) < 5 {
+				log.Fatal("wrong row values")
+			}
+		}
+	}
+	log.Printf("  queries took %s", utl.Since(tstart))
+	log.Printf("  fsize %v", utl.Fsize(dbfile))
+}
+
+func benchLarge(sqinnPath, dbfile string, nplants, nqueries, nameLength int) {
+	log.Printf("benchLarge dbfile=%s, nplants=%d, nqueries=%d, nameLength=%d", dbfile, nplants, nqueries, nameLength)
+	// start sqinn
+	sq := launchOpenPrepare(sqinnPath, dbfile, true, []string{utl.SqlCreatePlants})
+	defer closeAndTerminate(sq)
+	// insert
+	name := ""
+	for len(name) < nameLength {
+		name = name + "Name "
+	}
+	_, err := sq.ExecOne("BEGIN")
+	check(err)
+	fieldsPerRow := 2 // id, name
+	values := make([]interface{}, 0, nplants*fieldsPerRow)
+	for i := 0; i < nplants; i++ {
+		id := i + 1
+		values = append(values, id, name)
+	}
+	_, err = sq.Exec(utl.SqlInsertPlants, nplants, fieldsPerRow, values)
+	check(err)
+	_, err = sq.ExecOne("COMMIT")
+	check(err)
+	// queries
+	tstart := time.Now()
+	for i := 0; i < nqueries; i++ {
+		colTypes := []byte{sqinn.ValInt, sqinn.ValText}
+		rows, err := sq.Query(utl.SqlSelectPlants, nil, colTypes)
+		check(err)
+		if len(rows) != nplants {
+			log.Fatalf("want %v rows but was %v", nplants, len(rows))
+		}
+		for _, row := range rows {
+			id := row.Values[0].Int.Value
+			name := row.Values[1].String.Value
+			if id < 1 || len(name) < nameLength {
+				log.Fatal("wrong row values")
+			}
+		}
+	}
+	log.Printf("  queries took %s", utl.Since(tstart))
 	log.Printf("  fsize %v", utl.Fsize(dbfile))
 }
 
 func benchConcurrent(sqinnPath, dbfile string, nbooks, nworkers int) {
 	log.Printf("benchConcurrent dbfile=%s, nbooks=%d, nworkers=%d", dbfile, nbooks, nworkers)
-	// make sure db doesn't exist
-	utl.Remove(dbfile)
-	// launch sqinn
-	sq, err := sqinn.Launch(sqinn.Options{
-		SqinnPath: sqinnPath,
-	})
-	check(err)
-	defer sq.Terminate()
-	// open db
-	err = sq.Open(dbfile)
-	check(err)
-	defer sq.Close()
-	// prepare schema
-	_, err = sq.ExecOne(utl.SqlCreateBooks)
-	check(err)
+	// start sqinn
+	sq := launchOpenPrepare(sqinnPath, dbfile, true, []string{utl.SqlCreateBooks})
+	defer closeAndTerminate(sq)
 	// insert
-	_, err = sq.ExecOne("BEGIN")
+	_, err := sq.ExecOne("BEGIN")
 	check(err)
 	values := make([]interface{}, 0, nbooks*2)
 	for b := 0; b < nbooks; b++ {
@@ -224,17 +293,11 @@ func benchConcurrent(sqinnPath, dbfile string, nbooks, nworkers int) {
 	for w := 0; w < nworkers; w++ {
 		go func(w int) {
 			defer wg.Done()
-			// launch sqinn
-			sq, err := sqinn.Launch(sqinn.Options{
-				SqinnPath: sqinnPath,
-			})
-			check(err)
-			defer sq.Terminate()
-			// open db
-			err = sq.Open(dbfile)
-			check(err)
-			defer sq.Close()
-			// we have to set busy timeout, sqinn does not support the unlock-notify API
+			// start sqinn, do NOT clear db file when starting
+			sq := launchOpenPrepare(sqinnPath, dbfile, false, nil)
+			defer closeAndTerminate(sq)
+			// we have to set busy timeout because many goroutines are accessing
+			// the database concurrently and might be stepping on each others toes
 			_, err = sq.ExecOne("PRAGMA busy_timeout=10000") // 10s should be enough for everybody
 			check(err)
 			// query
@@ -256,18 +319,23 @@ func benchConcurrent(sqinnPath, dbfile string, nbooks, nworkers int) {
 		}(w)
 	}
 	wg.Wait()
-	// done
-	log.Printf("  queries took %s", time.Since(tstart))
+	log.Printf("  queries took %s", utl.Since(tstart))
 	log.Printf("  fsize %v", utl.Fsize(dbfile))
 }
 
 func main() {
+	log.Printf("sqinn")
 	sqinnPath := os.Getenv("SQINN_PATH")
-	log.Printf("sqinn %s", sqinnPath)
 	utl.ParseFlags()
 	benchSimple(sqinnPath, utl.Dbfile, utl.Nusers)
 	benchComplex(sqinnPath, utl.Dbfile, utl.Nprofiles, utl.Ndevices, utl.Nlocations)
-	benchConcurrent(sqinnPath, utl.Dbfile, utl.Nbooks, 2)
-	benchConcurrent(sqinnPath, utl.Dbfile, utl.Nbooks, 4)
-	benchConcurrent(sqinnPath, utl.Dbfile, utl.Nbooks, 8)
+	for _, n := range utl.NcarCounts {
+		benchMany(sqinnPath, utl.Dbfile, n, utl.NcarQueries)
+	}
+	for _, n := range utl.PlantNameLengths {
+		benchLarge(sqinnPath, utl.Dbfile, utl.Nplants, utl.NplantQueries, n)
+	}
+	for _, n := range utl.Ngoroutines {
+		benchConcurrent(sqinnPath, utl.Dbfile, utl.Nbooks, n)
+	}
 }
