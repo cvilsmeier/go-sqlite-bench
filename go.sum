@@ -1,8 +1,7 @@
 crawshaw.io/iox v0.0.0-20181124134642-c51c3df30797/go.mod h1:sXBiorCo8c46JlQV3oXPKINnZ8mcqnye1EkVkqsectk=
 crawshaw.io/sqlite v0.3.2 h1:N6IzTjkiw9FItHAa0jp+ZKC6tuLzXqAYIv+ccIWos1I=
 crawshaw.io/sqlite v0.3.2/go.mod h1:igAO5JulrQ1DbdZdtVq48mnZUBAPOeFzer7VhDWNtW4=
-github.com/cvilsmeier/sqinn-go v1.0.0 h1:+OpPp/+kJyFc520I1bX/BI9QG26NJD1ZYxRvS91n/FY=
-github.com/cvilsmeier/sqinn-go v1.0.0/go.mod h1:TNvgF+q/c1MtDjnI8V8zdW2NlSVB154Z1wDGoNzaosM=
-github.com/mattn/go-sqlite3 v1.13.0 h1:LnJI81JidiW9r7pS/hXe6cFeO5EXNq7KbfvoJLRI69c=
+github.com/cvilsmeier/sqinn-go v1.1.0 h1:M6/Jiv48IkJ2k2VULgKUflB+5bb0RYc0IhOUg8x3ZPA=
+github.com/cvilsmeier/sqinn-go v1.1.0/go.mod h1:ZIFiX2SbRar1h+BzDTptqezCWq0nUf0XlZBhrgDqPP0=
 github.com/mattn/go-sqlite3 v2.0.3+incompatible h1:gXHsfypPkaMZrKbD5209QV9jbUTJKjyR5WD3HYQSd+U=
 github.com/mattn/go-sqlite3 v2.0.3+incompatible/go.mod h1:FPy6KqzDD04eiIsT53CuJW3U88zkxoIYsOqkbpncsNc=
