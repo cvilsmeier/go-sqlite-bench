@@ -4,10 +4,15 @@ Benchmarks for Sqinn-Go
 Performance tests show that Sqinn-Go is comparable to cgo-based solutions,
 depending on the use case and on the cgo-solution that's used.
 
-For benchmarks I used `github.com/mattn/go-sqlite3` and `crawshaw.io/sqlite`,
-two cgo-based solutions. The first (mattn) is the de-facto standard and widely
-used. The second (crawshaw) is a newer library. Most notabley, mattn is a
-`database/sql` driver, crawshaw is not.
+For benchmarks I used the following libraries:
+
+- `github.com/mattn/go-sqlite3`, a cgo-based solution. This library is
+  (still) the de-facto standard and widely used. 
+
+- `modernc.org/sqlite`, a pure-go solution. This is a newer library,
+  based purely on a go implementation of the sqlite3 source code.
+
+- `crawshaw.io/sqlite`, a cgo-based solution. This is not a `database/sql` driver.
 
 The test setup is as follows:
 
@@ -86,15 +91,8 @@ each goroutine queries all 1000000 rows.
 Summary
 ------------------------------------------------------------------------------
 
-In all of the above benchmarks, the crawshaw library is faster than the mattn
-library.
+In benchmark "Large", Sqinn-Go is slower than the other solutions:
+When dealing with very large rows, Sqinn-Go has to shuffle a lot of data
+across process boundaries, and that takes time.
 
-In most benchmarks, Sqinn-Go is the fastest solution, with one notable
-exception:
-
-- Benchmark "Large": When dealing with very large rows, Sqinn-Go
-  has to shuffle a lot of data across process boundaries, and that takes time.
-
-Every application is different, and I recommend that you perform
-benchmarks based on the typical workload of your application. As always, it
-depends.
+In all other benchmarks, Sqinn-Go is the fastest solution.
