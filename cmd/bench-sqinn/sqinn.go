@@ -14,6 +14,22 @@ import (
 	"github.com/cvilsmeier/sqinn-go/sqinn"
 )
 
+func main() {
+	utl.Init("sqinn")
+	sqinnPath := os.Getenv("SQINN_PATH")
+	benchSimple(sqinnPath, utl.Dbfile, utl.Nusers)
+	benchComplex(sqinnPath, utl.Dbfile, utl.Nprofiles, utl.Ndevices, utl.Nlocations)
+	for _, n := range utl.NcarCounts {
+		benchMany(sqinnPath, utl.Dbfile, n, utl.NcarQueries)
+	}
+	for _, n := range utl.PlantNameLengths {
+		benchLarge(sqinnPath, utl.Dbfile, utl.Nplants, utl.NplantQueries, n)
+	}
+	for _, n := range utl.Ngoroutines {
+		benchConcurrent(sqinnPath, utl.Dbfile, utl.Nbooks, n)
+	}
+}
+
 func check(err error) {
 	if err != nil {
 		panic(err)
@@ -321,21 +337,4 @@ func benchConcurrent(sqinnPath, dbfile string, nbooks, nworkers int) {
 	wg.Wait()
 	log.Printf("  queries took %s", utl.Since(tstart))
 	log.Printf("  fsize %v", utl.Fsize(dbfile))
-}
-
-func main() {
-	log.Printf("sqinn")
-	sqinnPath := os.Getenv("SQINN_PATH")
-	utl.ParseFlags()
-	benchSimple(sqinnPath, utl.Dbfile, utl.Nusers)
-	benchComplex(sqinnPath, utl.Dbfile, utl.Nprofiles, utl.Ndevices, utl.Nlocations)
-	for _, n := range utl.NcarCounts {
-		benchMany(sqinnPath, utl.Dbfile, n, utl.NcarQueries)
-	}
-	for _, n := range utl.PlantNameLengths {
-		benchLarge(sqinnPath, utl.Dbfile, utl.Nplants, utl.NplantQueries, n)
-	}
-	for _, n := range utl.Ngoroutines {
-		benchConcurrent(sqinnPath, utl.Dbfile, utl.Nbooks, n)
-	}
 }

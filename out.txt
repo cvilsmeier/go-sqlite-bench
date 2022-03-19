@@ -1,0 +1,140 @@
+mattn: benchSimple dbfile=../bench.db, nusers=1000000
+mattn:   insert took 1780 ms
+mattn:   query took 1350 ms
+mattn:   fsize 32972800 (32200 K)
+mattn: benchComplex dbfile=../bench.db, nprofiles, ndevices, nlocations = 200, 100, 10
+mattn:   insert took 954 ms
+mattn:   query took 800 ms
+mattn:   fsize 31580160 (30840 K)
+mattn: benchMany dbfile=../bench.db, ncars=10, nqueries=1000
+mattn:   queries took 18 ms
+mattn:   fsize 8192 (8 K)
+mattn: benchMany dbfile=../bench.db, ncars=100, nqueries=1000
+mattn:   queries took 106 ms
+mattn:   fsize 8192 (8 K)
+mattn: benchMany dbfile=../bench.db, ncars=1000, nqueries=1000
+mattn:   queries took 1044 ms
+mattn:   fsize 40960 (40 K)
+mattn: benchLarge dbfile=../bench.db, nplants=500, nqueries=100, nameLength=2000
+mattn:   queries took 70 ms
+mattn:   fsize 1032192 (1008 K)
+mattn: benchLarge dbfile=../bench.db, nplants=500, nqueries=100, nameLength=4000
+mattn:   queries took 114 ms
+mattn:   fsize 2056192 (2008 K)
+mattn: benchLarge dbfile=../bench.db, nplants=500, nqueries=100, nameLength=8000
+mattn:   queries took 240 ms
+mattn:   fsize 4104192 (4008 K)
+mattn: benchConcurrent dbfile=../bench.db, nbooks=1000000, nworkers=2
+mattn:   queries took 953 ms
+mattn:   fsize 20008960 (19540 K)
+mattn: benchConcurrent dbfile=../bench.db, nbooks=1000000, nworkers=4
+mattn:   queries took 1217 ms
+mattn:   fsize 20008960 (19540 K)
+mattn: benchConcurrent dbfile=../bench.db, nbooks=1000000, nworkers=8
+mattn:   queries took 1860 ms
+mattn:   fsize 20008960 (19540 K)
+cznic: benchSimple dbfile=../bench.db, nusers=1000000
+cznic:   insert took 4610 ms
+cznic:   query took 1035 ms
+cznic:   fsize 32972800 (32200 K)
+cznic: benchComplex dbfile=../bench.db, nprofiles, ndevices, nlocations = 200, 100, 10
+cznic:   insert took 3068 ms
+cznic:   query took 1032 ms
+cznic:   fsize 31580160 (30840 K)
+cznic: benchMany dbfile=../bench.db, ncars=10, nqueries=1000
+cznic:   queries took 32 ms
+cznic:   fsize 8192 (8 K)
+cznic: benchMany dbfile=../bench.db, ncars=100, nqueries=1000
+cznic:   queries took 97 ms
+cznic:   fsize 8192 (8 K)
+cznic: benchMany dbfile=../bench.db, ncars=1000, nqueries=1000
+cznic:   queries took 898 ms
+cznic:   fsize 40960 (40 K)
+cznic: benchLarge dbfile=../bench.db, nplants=500, nqueries=100, nameLength=2000
+cznic:   queries took 69 ms
+cznic:   fsize 1032192 (1008 K)
+cznic: benchLarge dbfile=../bench.db, nplants=500, nqueries=100, nameLength=4000
+cznic:   queries took 258 ms
+cznic:   fsize 2056192 (2008 K)
+cznic: benchLarge dbfile=../bench.db, nplants=500, nqueries=100, nameLength=8000
+cznic:   queries took 312 ms
+cznic:   fsize 4104192 (4008 K)
+cznic: benchConcurrent dbfile=../bench.db, nbooks=1000000, nworkers=2
+cznic:   queries took 724 ms
+cznic:   fsize 20008960 (19540 K)
+cznic: benchConcurrent dbfile=../bench.db, nbooks=1000000, nworkers=4
+cznic:   queries took 936 ms
+cznic:   fsize 20008960 (19540 K)
+cznic: benchConcurrent dbfile=../bench.db, nbooks=1000000, nworkers=8
+cznic:   queries took 2011 ms
+cznic:   fsize 20008960 (19540 K)
+crawshaw: benchSimple dbfile=../bench.db, nusers=1000000
+crawshaw:   insert took 1245 ms
+crawshaw:   query took 748 ms
+crawshaw:   fsize 32972800 (32200 K)
+crawshaw: benchComplex dbfile=../bench.db, nprofiles, ndevices, nlocations = 200, 100, 10
+crawshaw:   insert took 868 ms
+crawshaw:   query took 629 ms
+crawshaw:   fsize 31580160 (30840 K)
+crawshaw: benchMany dbfile=../bench.db, ncars=10, nqueries=1000
+crawshaw:   queries took 17 ms
+crawshaw:   fsize 8192 (8 K)
+crawshaw: benchMany dbfile=../bench.db, ncars=100, nqueries=1000
+crawshaw:   queries took 86 ms
+crawshaw:   fsize 8192 (8 K)
+crawshaw: benchMany dbfile=../bench.db, ncars=1000, nqueries=1000
+crawshaw:   queries took 684 ms
+crawshaw:   fsize 40960 (40 K)
+crawshaw: benchLarge dbfile=../bench.db, nplants=500, nqueries=100, nameLength=2000
+crawshaw:   queries took 84 ms
+crawshaw:   fsize 1032192 (1008 K)
+crawshaw: benchLarge dbfile=../bench.db, nplants=500, nqueries=100, nameLength=4000
+crawshaw:   queries took 95 ms
+crawshaw:   fsize 2056192 (2008 K)
+crawshaw: benchLarge dbfile=../bench.db, nplants=500, nqueries=100, nameLength=8000
+crawshaw:   queries took 148 ms
+crawshaw:   fsize 4104192 (4008 K)
+crawshaw: benchConcurrent dbfile=../bench.db, nbooks=1000000, nworkers=2
+crawshaw:   queries took 581 ms
+crawshaw:   fsize 20008960 (19540 K)
+crawshaw: benchConcurrent dbfile=../bench.db, nbooks=1000000, nworkers=4
+crawshaw:   queries took 789 ms
+crawshaw:   fsize 20008960 (19540 K)
+crawshaw: benchConcurrent dbfile=../bench.db, nbooks=1000000, nworkers=8
+crawshaw:   queries took 1250 ms
+crawshaw:   fsize 20008960 (19540 K)
+sqinn: benchSimple dbfile=../bench.db, nusers=1000000
+sqinn:   insert took 729 ms
+sqinn:   query took 549 ms
+sqinn:   fsize 32972800 (32200 K)
+sqinn: benchComplex dbfile=../bench.db, nprofiles, ndevices, nlocations = 200, 100, 10
+sqinn:   insert took 834 ms
+sqinn:   query took 555 ms
+sqinn:   fsize 31580160 (30840 K)
+sqinn: benchMany dbfile=../bench.db, ncars=10, nqueries=1000
+sqinn:   queries took 19 ms
+sqinn:   fsize 8192 (8 K)
+sqinn: benchMany dbfile=../bench.db, ncars=100, nqueries=1000
+sqinn:   queries took 52 ms
+sqinn:   fsize 8192 (8 K)
+sqinn: benchMany dbfile=../bench.db, ncars=1000, nqueries=1000
+sqinn:   queries took 425 ms
+sqinn:   fsize 40960 (40 K)
+sqinn: benchLarge dbfile=../bench.db, nplants=500, nqueries=100, nameLength=2000
+sqinn:   queries took 82 ms
+sqinn:   fsize 1032192 (1008 K)
+sqinn: benchLarge dbfile=../bench.db, nplants=500, nqueries=100, nameLength=4000
+sqinn:   queries took 215 ms
+sqinn:   fsize 2056192 (2008 K)
+sqinn: benchLarge dbfile=../bench.db, nplants=500, nqueries=100, nameLength=8000
+sqinn:   queries took 439 ms
+sqinn:   fsize 4104192 (4008 K)
+sqinn: benchConcurrent dbfile=../bench.db, nbooks=1000000, nworkers=2
+sqinn:   queries took 388 ms
+sqinn:   fsize 20008960 (19540 K)
+sqinn: benchConcurrent dbfile=../bench.db, nbooks=1000000, nworkers=4
+sqinn:   queries took 575 ms
+sqinn:   fsize 20008960 (19540 K)
+sqinn: benchConcurrent dbfile=../bench.db, nbooks=1000000, nworkers=8
+sqinn:   queries took 1131 ms
+sqinn:   fsize 20008960 (19540 K)

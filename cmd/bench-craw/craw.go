@@ -11,6 +11,21 @@ import (
 	"github.com/cvilsmeier/sqinn-go-bench/utl"
 )
 
+func main() {
+	utl.Init("crawshaw")
+	benchSimple(utl.Dbfile, utl.Nusers)
+	benchComplex(utl.Dbfile, utl.Nprofiles, utl.Ndevices, utl.Nlocations)
+	for _, n := range utl.NcarCounts {
+		benchMany(utl.Dbfile, n, utl.NcarQueries)
+	}
+	for _, n := range utl.PlantNameLengths {
+		benchLarge(utl.Dbfile, utl.Nplants, utl.NplantQueries, n)
+	}
+	for _, n := range utl.Ngoroutines {
+		benchConcurrent(utl.Dbfile, utl.Nbooks, n)
+	}
+}
+
 func check(err error) {
 	if err != nil {
 		panic(err)
@@ -442,20 +457,4 @@ func benchConcurrent(dbfile string, nbooks, nworkers int) {
 	wg.Wait()
 	log.Printf("  queries took %s", utl.Since(tstart))
 	log.Printf("  fsize %v", utl.Fsize(dbfile))
-}
-
-func main() {
-	log.Printf("crawshaw")
-	utl.ParseFlags()
-	benchSimple(utl.Dbfile, utl.Nusers)
-	benchComplex(utl.Dbfile, utl.Nprofiles, utl.Ndevices, utl.Nlocations)
-	for _, n := range utl.NcarCounts {
-		benchMany(utl.Dbfile, n, utl.NcarQueries)
-	}
-	for _, n := range utl.PlantNameLengths {
-		benchLarge(utl.Dbfile, utl.Nplants, utl.NplantQueries, n)
-	}
-	for _, n := range utl.Ngoroutines {
-		benchConcurrent(utl.Dbfile, utl.Nbooks, n)
-	}
 }

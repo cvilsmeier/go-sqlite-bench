@@ -3,6 +3,7 @@ package utl
 import (
 	"flag"
 	"fmt"
+	"log"
 	"os"
 	"strings"
 	"time"
@@ -72,7 +73,10 @@ var (
 	Dbfile = "./sqinn-go-bench.db"
 )
 
-func ParseFlags() {
+func Init(name string) {
+	log.SetOutput(os.Stdout)
+	log.SetFlags(0)
+	log.SetPrefix(name + ": ")
 	flag.StringVar(&Dbfile, "db", Dbfile, "path to db file for test")
 	flag.Parse()
 }

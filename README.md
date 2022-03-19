@@ -11,13 +11,14 @@ used. The second (crawshaw) is a newer library. Most notabley, mattn is a
 
 The test setup is as follows:
 
-- OS: Windows 10 Home x64 Version 1909 Build 18363
-- CPU: Intel(R) Core(TM) i7-6700HQ CPU @ 2.60GHz, 2592 MHz, 4 Cores
+- OS: Debian/GNU Linux amd64 version 11.2
+- CPU: 11th Gen Intel(R) Core(TM) i7-1165G7 @ 2.80GHz, 8 Cores
 - RAM: 16GB
-- Disk: 256GB SSD
+- Disk: 1TB NVME SSD
+- go version: go1.17.8 linux/amd64
 
 Result times are measured in milliseconds. Lower numbers indicate better
-performance. Each benchmark was executed twice and the minimum time of each
+performance. Each benchmark was executed twice (for warmup) and the second
 run was taken.
 
 For details, please see the souce code. The next section describes the
@@ -32,21 +33,20 @@ Benchmarks
 Insert 1 million rows in a simple table. Then query all rows.
 All inserts are done in one transaction.
 
-                       mattn  crawshaw     sqinn
-    simple/insert       2901      2140      1563
-    simple/query        2239      1287      1390
+                       mattn   cznic  crawshaw   sqinn
+    simple/insert       1780    4610      1245     729
+    simple/query        1350    1035       748     549
 
 
 ### Complex
 
 A more complex table schema with foreign key constraints and many indices.
 Inserting and querying 200000 rows in one goroutine.
-
 All inserts are done in one transaction.
 
-                       mattn  crawshaw     sqinn
-    complex/insert      2066      1817      1683
-    complex/query       1458      1129      1338
+                       mattn   cznic  crawshaw   sqinn
+    complex/insert       954    3068       868     834
+    complex/query        800    1032       629     555
 
 
 ### Many
@@ -55,10 +55,10 @@ Querying a simple table with N rows 1000 times in one goroutine.
 This benchmark is used to simulate the "N+1 Select" problem. N is the number
 of rows in the table.
 
-                       mattn  crawshaw     sqinn
-    many/N=10             97        78       134
-    many/N=100           246       194       276
-    many/N=1000         1797      1240      1436
+                       mattn   cznic  crawshaw   sqinn
+    many/N=10             18      32        17      19
+    many/N=100           106      97        86      52
+    many/N=1000         1044     898       684     425
 
 
 ### Large
@@ -66,10 +66,10 @@ of rows in the table.
 Querying a table with very large row contents. N is the size of the row in
 bytes.
 
-                       mattn  crawshaw     sqinn
-    large/N=2000         119        87       341
-    large/N=4000         361       322       760
-    large/N=8000         701       650      1531
+                       mattn   cznic  crawshaw   sqinn
+    large/N=2000          70      69        84      82
+    large/N=4000         114     258        95     215
+    large/N=8000         240     312       148     439
 
 
 ### Concurrent
@@ -77,10 +77,10 @@ bytes.
 Querying a table with 1 million rows concurrently. Spin up N goroutines, where
 each goroutine queries all 1000000 rows.
 
-                       mattn  crawshaw     sqinn
-    concurrent/N=2      1332       865       951    
-    concurrent/N=4      1505       989      1207    
-    concurrent/N=8      2347      1557      2044     
+                       mattn   cznic  crawshaw   sqinn
+    concurrent/N=2       953     724       581     388
+    concurrent/N=4      1217     936       789     575
+    concurrent/N=8      1860    2011      1250    1131
 
 
 Summary
@@ -89,14 +89,11 @@ Summary
 In all of the above benchmarks, the crawshaw library is faster than the mattn
 library.
 
-In most benchmarks, Sqinn-Go lies between mattn and crawshaw, with two
-exceptions.
+In most benchmarks, Sqinn-Go is the fastest solution, with one notable
+exception:
 
 - Benchmark "Large": When dealing with very large rows, Sqinn-Go
   has to shuffle a lot of data across process boundaries, and that takes time.
-
-- Benchmark "Many": When handling many fast-executing queries, Sqinn-Go has to
-  make a lot of process switches, which is time consuming.
 
 Every application is different, and I recommend that you perform
 benchmarks based on the typical workload of your application. As always, it

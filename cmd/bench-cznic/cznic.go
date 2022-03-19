@@ -8,11 +8,11 @@ import (
 	"time"
 
 	"github.com/cvilsmeier/sqinn-go-bench/utl"
-	_ "github.com/mattn/go-sqlite3"
+	_ "modernc.org/sqlite"
 )
 
 func main() {
-	utl.Init("mattn")
+	utl.Init("cznic")
 	benchSimple(utl.Dbfile, utl.Nusers)
 	benchComplex(utl.Dbfile, utl.Nprofiles, utl.Ndevices, utl.Nlocations)
 	for _, n := range utl.NcarCounts {
@@ -38,7 +38,7 @@ func openPrepare(dbfile string, clearDbfile bool, sqls []string) *sql.DB {
 		utl.Remove(dbfile)
 	}
 	// open db
-	db, err := sql.Open("sqlite3", dbfile)
+	db, err := sql.Open("sqlite", dbfile)
 	check(err)
 	// prepare schema
 	for _, s := range sqls {
