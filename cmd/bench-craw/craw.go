@@ -1,460 +1,216 @@
 package main
 
 import (
-	"fmt"
-	"log"
-	"sync"
-	"time"
+	"context"
 
 	"crawshaw.io/sqlite"
 	"crawshaw.io/sqlite/sqlitex"
-	"github.com/cvilsmeier/sqinn-go-bench/utl"
+	"github.com/cvilsmeier/go-sqlite-bench/app"
 )
 
 func main() {
-	utl.Init("crawshaw")
-	benchSimple(utl.Dbfile, utl.Nusers)
-	benchComplex(utl.Dbfile, utl.Nprofiles, utl.Ndevices, utl.Nlocations)
-	for _, n := range utl.NcarCounts {
-		benchMany(utl.Dbfile, n, utl.NcarQueries)
-	}
-	for _, n := range utl.PlantNameLengths {
-		benchLarge(utl.Dbfile, utl.Nplants, utl.NplantQueries, n)
-	}
-	for _, n := range utl.Ngoroutines {
-		benchConcurrent(utl.Dbfile, utl.Nbooks, n)
-	}
+	app.Run(func(dbfile string) app.Db {
+		return newDb(dbfile)
+	})
 }
 
-func check(err error) {
-	if err != nil {
-		panic(err)
-	}
+type dbImpl struct {
+	pool *sqlitex.Pool
 }
 
-func prepStepFin(con *sqlite.Conn, sql string) {
-	stmt := con.Prep(sql)
-	_, err := stmt.Step()
-	check(err)
-	err = stmt.Finalize()
-	check(err)
-}
+var _ app.Db = (*dbImpl)(nil)
 
-func openPrepare(dbfile string, clearDbfile bool, poolSize int, sqls []string) *sqlitex.Pool {
-	// make sure db doesn't exist
-	if clearDbfile {
-		utl.Remove(dbfile)
-	}
-	// open db
+func newDb(dbfile string) app.Db {
 	flags := sqlite.SQLITE_OPEN_READWRITE |
 		sqlite.SQLITE_OPEN_CREATE |
 		sqlite.SQLITE_OPEN_URI |
 		sqlite.SQLITE_OPEN_NOMUTEX
+	const poolSize = 1
 	pool, err := sqlitex.Open(dbfile, flags, poolSize)
-	check(err)
-	// prepare schema
-	conn := pool.Get(nil)
+	app.MustBeNil(err)
+	return &dbImpl{pool}
+}
+
+func (d *dbImpl) Exec(sqls ...string) {
+	conn := d.pool.Get(context.TODO())
+	defer d.pool.Put(conn)
+	app.MustBeSet(conn)
 	for _, s := range sqls {
-		prepStepFin(conn, s)
+		d.exec(conn, s)
 	}
-	pool.Put(conn)
-	return pool
 }
 
-func closePool(pool *sqlitex.Pool) {
-	err := pool.Close()
-	check(err)
-}
-
-func benchSimple(dbfile string, nusers int) {
-	log.Printf("benchSimple dbfile=%s, nusers=%d", dbfile, nusers)
-	pool := openPrepare(dbfile, true, 1, []string{utl.SqlCreateUsers})
-	defer closePool(pool)
-	conn := pool.Get(nil)
-	defer pool.Put(conn)
-	// insert users
-	tstart := time.Now()
-	prepStepFin(conn, "BEGIN")
-	stmt := conn.Prep(utl.SqlInsertUsers)
-	for i := 0; i < nusers; i++ {
-		id := i + 1
-		name := fmt.Sprintf("User %d", id)
-		age := 33 + id
-		rating := 0.13 * float64(id)
-		stmt.BindInt64(1, int64(id))
-		stmt.BindText(2, name)
-		stmt.BindInt64(3, int64(age))
-		stmt.BindFloat(4, rating)
+func (d *dbImpl) InsertUsers(insertSql string, users []app.User) {
+	conn := d.pool.Get(context.TODO())
+	defer d.pool.Put(conn)
+	d.exec(conn, "BEGIN")
+	stmt := conn.Prep(insertSql)
+	for _, u := range users {
+		//	Id        int
+		//	Created   time.Time
+		//	Email     string
+		//	Active    bool
+		stmt.BindInt64(1, int64(u.Id))
+		stmt.BindInt64(2, app.BindTime(u.Created))
+		stmt.BindText(3, u.Email)
+		stmt.BindBool(4, u.Active)
 		_, err := stmt.Step()
-		check(err)
+		app.MustBeNil(err)
 		err = stmt.Reset()
-		check(err)
+		app.MustBeNil(err)
 	}
 	err := stmt.Finalize()
-	check(err)
-	prepStepFin(conn, "COMMIT")
-	log.Printf("  insert took %s", utl.Since(tstart))
-	// query users
-	tstart = time.Now()
-	stmt, err = conn.Prepare(utl.SqlSelectUsers)
-	check(err)
+	app.MustBeNil(err)
+	d.exec(conn, "COMMIT")
+}
+
+func (d *dbImpl) InsertArticles(insertSql string, articles []app.Article) {
+	conn := d.pool.Get(context.TODO())
+	defer d.pool.Put(conn)
+	d.exec(conn, "BEGIN")
+	stmt := conn.Prep(insertSql)
+	for _, u := range articles {
+		stmt.BindInt64(1, int64(u.Id))
+		stmt.BindInt64(2, app.BindTime(u.Created))
+		stmt.BindInt64(3, int64(u.UserId))
+		stmt.BindText(4, u.Text)
+		_, err := stmt.Step()
+		app.MustBeNil(err)
+		err = stmt.Reset()
+		app.MustBeNil(err)
+	}
+	err := stmt.Finalize()
+	app.MustBeNil(err)
+	d.exec(conn, "COMMIT")
+}
+
+func (d *dbImpl) InsertComments(insertSql string, comments []app.Comment) {
+	conn := d.pool.Get(context.TODO())
+	defer d.pool.Put(conn)
+	d.exec(conn, "BEGIN")
+	stmt := conn.Prep(insertSql)
+	for _, u := range comments {
+		stmt.BindInt64(1, int64(u.Id))
+		stmt.BindInt64(2, app.BindTime(u.Created))
+		stmt.BindInt64(3, int64(u.ArticleId))
+		stmt.BindText(4, u.Text)
+		_, err := stmt.Step()
+		app.MustBeNil(err)
+		err = stmt.Reset()
+		app.MustBeNil(err)
+	}
+	err := stmt.Finalize()
+	app.MustBeNil(err)
+	d.exec(conn, "COMMIT")
+}
+
+func (d *dbImpl) FindUsers(querySql string) []app.User {
+	conn := d.pool.Get(context.TODO())
+	defer d.pool.Put(conn)
+	stmt, err := conn.Prepare(querySql)
+	app.MustBeNil(err)
 	more, err := stmt.Step()
-	check(err)
-	var nrows int
+	app.MustBeNil(err)
+	var users []app.User
 	for more {
-		nrows++
-		var id int
-		var name string
-		var age int
-		var rating float64
-		if stmt.ColumnType(0) != sqlite.SQLITE_NULL {
-			id = stmt.ColumnInt(0)
+		user := app.NewUser(
+			stmt.ColumnInt(0),                   // id,
+			app.UnbindTime(stmt.ColumnInt64(1)), // created,
+			stmt.ColumnText(2),                  // email,
+			stmt.ColumnInt(3) != 0,              // active,
+		)
+		users = append(users, user)
+		more, err = stmt.Step()
+		app.MustBeNil(err)
+	}
+	return users
+}
+
+func (d *dbImpl) FindArticles(querySql string) []app.Article {
+	conn := d.pool.Get(context.TODO())
+	defer d.pool.Put(conn)
+	stmt, err := conn.Prepare(querySql)
+	app.MustBeNil(err)
+	more, err := stmt.Step()
+	app.MustBeNil(err)
+	var articles []app.Article
+	for more {
+		article := app.NewArticle(
+			stmt.ColumnInt(0),                   // id,
+			app.UnbindTime(stmt.ColumnInt64(1)), // created,
+			stmt.ColumnInt(2),                   // userId,
+			stmt.ColumnText(3),                  // text,
+		)
+		articles = append(articles, article)
+		more, err = stmt.Step()
+		app.MustBeNil(err)
+	}
+	return articles
+}
+
+func (d *dbImpl) FindUsersArticlesComments(querySql string) ([]app.User, []app.Article, []app.Comment) {
+	conn := d.pool.Get(context.TODO())
+	defer d.pool.Put(conn)
+	stmt, err := conn.Prepare(querySql)
+	app.MustBeNil(err)
+	more, err := stmt.Step()
+	app.MustBeNil(err)
+	// collections
+	var users []app.User
+	userIndexer := make(map[int]int)
+	var articles []app.Article
+	articleIndexer := make(map[int]int)
+	var comments []app.Comment
+	commentIndexer := make(map[int]int)
+	for more {
+		user := app.NewUser(
+			stmt.ColumnInt(0),                   // id,
+			app.UnbindTime(stmt.ColumnInt64(1)), // created,
+			stmt.ColumnText(2),                  // email,
+			stmt.ColumnInt(3) != 0,              // active,
+		)
+		article := app.NewArticle(
+			stmt.ColumnInt(4),                   // id,
+			app.UnbindTime(stmt.ColumnInt64(5)), // created,
+			stmt.ColumnInt(6),                   // userId,
+			stmt.ColumnText(7),                  // text,
+		)
+		comment := app.NewComment(
+			stmt.ColumnInt(8),                   // id,
+			app.UnbindTime(stmt.ColumnInt64(9)), // created,
+			stmt.ColumnInt(10),                  // articleId,
+			stmt.ColumnText(11),                 // text,
+		)
+		_, ok := userIndexer[user.Id]
+		if !ok {
+			userIndexer[user.Id] = len(users)
+			users = append(users, user)
 		}
-		if stmt.ColumnType(1) != sqlite.SQLITE_NULL {
-			name = stmt.ColumnText(1)
+		_, ok = articleIndexer[article.Id]
+		if !ok {
+			articleIndexer[article.Id] = len(articles)
+			articles = append(articles, article)
 		}
-		if stmt.ColumnType(2) != sqlite.SQLITE_NULL {
-			age = stmt.ColumnInt(2)
-		}
-		if stmt.ColumnType(3) != sqlite.SQLITE_NULL {
-			rating = stmt.ColumnFloat(3)
-		}
-		if id < 1 || len(name) < 5 || age < 33 || rating < 0.13 {
-			log.Fatal("wrong row values")
+		_, ok = commentIndexer[comment.Id]
+		if !ok {
+			commentIndexer[comment.Id] = len(comments)
+			comments = append(comments, comment)
 		}
 		more, err = stmt.Step()
-		check(err)
+		app.MustBeNil(err)
 	}
-	if nrows != nusers {
-		log.Fatalf("expected %v rows but was %v", nusers, nrows)
-	}
-	log.Printf("  query took %s", utl.Since(tstart))
-	log.Printf("  fsize %v", utl.Fsize(dbfile))
+	return users, articles, comments
 }
 
-func benchComplex(dbfile string, nprofiles, ndevices, nlocations int) {
-	log.Printf("benchComplex dbfile=%s, nprofiles, ndevices, nlocations = %d, %d, %d", dbfile, nprofiles, ndevices, nlocations)
-	pool := openPrepare(dbfile, true, 1, utl.SqlCreateComplex)
-	defer closePool(pool)
-	conn := pool.Get(nil)
-	defer pool.Put(conn)
-	// insert profiles
-	tstart := time.Now()
-	prepStepFin(conn, "BEGIN")
-	stmt := conn.Prep(utl.SqlInsertProfiles)
-	for p := 0; p < nprofiles; p++ {
-		profileID := fmt.Sprintf("profile_%d", p)
-		name := fmt.Sprintf("Profile %d", p)
-		active := p % 2
-		stmt.BindText(1, profileID)
-		stmt.BindText(2, name)
-		stmt.BindInt64(3, int64(active))
-		_, err := stmt.Step()
-		check(err)
-		err = stmt.Reset()
-		check(err)
-	}
-	err := stmt.Finalize()
-	check(err)
-	prepStepFin(conn, "COMMIT")
-	// insert devices
-	prepStepFin(conn, "BEGIN")
-	stmt = conn.Prep(utl.SqlInsertDevices)
-	for p := 0; p < nprofiles; p++ {
-		profileID := fmt.Sprintf("profile_%d", p)
-		for d := 0; d < ndevices; d++ {
-			deviceID := fmt.Sprintf("device_%d_%d", p, d)
-			name := fmt.Sprintf("Device %d %d", p, d)
-			active := d % 2
-			stmt.BindText(1, deviceID)
-			stmt.BindText(2, profileID)
-			stmt.BindText(3, name)
-			stmt.BindInt64(4, int64(active))
-			_, err = stmt.Step()
-			check(err)
-			err = stmt.Reset()
-			check(err)
-		}
-	}
+func (d *dbImpl) Close() {
+	err := d.pool.Close()
+	app.MustBeNil(err)
+}
+
+func (d *dbImpl) exec(conn *sqlite.Conn, sql string) {
+	stmt := conn.Prep(sql)
+	_, err := stmt.Step()
+	app.MustBeNil(err)
 	err = stmt.Finalize()
-	check(err)
-	prepStepFin(conn, "COMMIT")
-	// insert locations
-	prepStepFin(conn, "BEGIN")
-	stmt = conn.Prep(utl.SqlInsertLocations)
-	for p := 0; p < nprofiles; p++ {
-		for d := 0; d < ndevices; d++ {
-			deviceID := fmt.Sprintf("device_%d_%d", p, d)
-			for l := 0; l < nlocations; l++ {
-				locationID := fmt.Sprintf("location_%d_%d_%d", p, d, l)
-				name := fmt.Sprintf("Location %d %d %d", p, d, l)
-				active := l % 2
-				stmt.BindText(1, locationID)
-				stmt.BindText(2, deviceID)
-				stmt.BindText(3, name)
-				stmt.BindInt64(4, int64(active))
-				_, err = stmt.Step()
-				check(err)
-				err = stmt.Reset()
-				check(err)
-			}
-		}
-	}
-	err = stmt.Finalize()
-	check(err)
-	prepStepFin(conn, "COMMIT")
-	log.Printf("  insert took %s", utl.Since(tstart))
-	// query
-	tstart = time.Now()
-	stmt = conn.Prep(utl.SqlSelectComplex)
-	stmt.BindInt64(1, int64(0))
-	stmt.BindInt64(2, int64(1))
-	more, err := stmt.Step()
-	check(err)
-	var nrows int
-	for more {
-		nrows++
-		var locationID string
-		var locationDeviceID string
-		var locationName string
-		var locationActive bool
-		var deviceID string
-		var deviceProfileID string
-		var deviceName string
-		var deviceActive bool
-		var profileID string
-		var profileName string
-		var profileActive bool
-		ci := 1
-		if stmt.ColumnType(ci) != sqlite.SQLITE_NULL {
-			locationID = stmt.ColumnText(ci)
-		}
-		ci++
-		if stmt.ColumnType(ci) != sqlite.SQLITE_NULL {
-			locationDeviceID = stmt.ColumnText(ci)
-		}
-		ci++
-		if stmt.ColumnType(ci) != sqlite.SQLITE_NULL {
-			locationName = stmt.ColumnText(ci)
-		}
-		ci++
-		if stmt.ColumnType(ci) != sqlite.SQLITE_NULL {
-			locationActive = stmt.ColumnInt(ci) != 0
-		}
-		ci++
-		if stmt.ColumnType(ci) != sqlite.SQLITE_NULL {
-			deviceID = stmt.ColumnText(ci)
-		}
-		ci++
-		if stmt.ColumnType(ci) != sqlite.SQLITE_NULL {
-			deviceProfileID = stmt.ColumnText(ci)
-		}
-		ci++
-		if stmt.ColumnType(ci) != sqlite.SQLITE_NULL {
-			deviceName = stmt.ColumnText(ci)
-		}
-		ci++
-		if stmt.ColumnType(ci) != sqlite.SQLITE_NULL {
-			deviceActive = stmt.ColumnInt(ci) != 0
-		}
-		ci++
-		if stmt.ColumnType(ci) != sqlite.SQLITE_NULL {
-			profileID = stmt.ColumnText(ci)
-		}
-		ci++
-		if stmt.ColumnType(ci) != sqlite.SQLITE_NULL {
-			profileName = stmt.ColumnText(ci)
-		}
-		ci++
-		if stmt.ColumnType(ci) != sqlite.SQLITE_NULL {
-			profileActive = stmt.ColumnInt(ci) != 0
-		}
-		_, _, _, _, _, _, _, _, _, _, _ = locationID, locationDeviceID, locationName, locationActive, deviceID, deviceProfileID, deviceName, deviceActive, profileID, profileName, profileActive
-		more, err = stmt.Step()
-		check(err)
-	}
-	expectedRows := nprofiles * ndevices * nlocations
-	if nrows != expectedRows {
-		log.Fatalf("expected %v rows but was %v", expectedRows, nrows)
-	}
-	log.Printf("  query took %s", utl.Since(tstart))
-	log.Printf("  fsize %v", utl.Fsize(dbfile))
-}
-
-func benchMany(dbfile string, ncars, nqueries int) {
-	log.Printf("benchMany dbfile=%s, ncars=%d, nqueries=%d", dbfile, ncars, nqueries)
-	pool := openPrepare(dbfile, true, 1, []string{utl.SqlCreateCars})
-	defer closePool(pool)
-	conn := pool.Get(nil)
-	defer pool.Put(conn)
-	// insert
-	prepStepFin(conn, "BEGIN")
-	stmt := conn.Prep(utl.SqlInsertCars)
-	for i := 0; i < ncars; i++ {
-		id := i + 1
-		company := fmt.Sprintf("Company %d", id)
-		model := fmt.Sprintf("Model %d", id)
-		stmt.BindInt64(1, int64(id))
-		stmt.BindText(2, company)
-		stmt.BindText(3, model)
-		_, err := stmt.Step()
-		check(err)
-		err = stmt.Reset()
-		check(err)
-	}
-	err := stmt.Finalize()
-	check(err)
-	prepStepFin(conn, "COMMIT")
-	// queries
-	tstart := time.Now()
-	for i := 0; i < nqueries; i++ {
-		stmt, err = conn.Prepare(utl.SqlSelectCars)
-		check(err)
-		more, err := stmt.Step()
-		check(err)
-		var nrows int
-		for more {
-			nrows++
-			var id int
-			var company string
-			var model string
-			if stmt.ColumnType(0) != sqlite.SQLITE_NULL {
-				id = stmt.ColumnInt(0)
-			}
-			if stmt.ColumnType(1) != sqlite.SQLITE_NULL {
-				company = stmt.ColumnText(1)
-			}
-			if stmt.ColumnType(2) != sqlite.SQLITE_NULL {
-				model = stmt.ColumnText(2)
-			}
-			if id < 1 || len(company) < 5 || len(model) < 5 {
-				log.Fatal("wrong row values")
-			}
-			more, err = stmt.Step()
-			check(err)
-		}
-		if nrows != ncars {
-			log.Fatalf("expected %v rows but was %v", ncars, nrows)
-		}
-	}
-	log.Printf("  queries took %s", utl.Since(tstart))
-	log.Printf("  fsize %v", utl.Fsize(dbfile))
-}
-
-func benchLarge(dbfile string, nplants, nqueries, nameLength int) {
-	log.Printf("benchLarge dbfile=%s, nplants=%d, nqueries=%d, nameLength=%d", dbfile, nplants, nqueries, nameLength)
-	pool := openPrepare(dbfile, true, 1, []string{utl.SqlCreateCars})
-	defer closePool(pool)
-	conn := pool.Get(nil)
-	defer pool.Put(conn)
-	// insert
-	name := ""
-	for len(name) < nameLength {
-		name = name + "Name "
-	}
-	prepStepFin(conn, "BEGIN")
-	stmt := conn.Prep(utl.SqlInsertCars)
-	for i := 0; i < nplants; i++ {
-		id := i + 1
-		stmt.BindInt64(1, int64(id))
-		stmt.BindText(2, name)
-		_, err := stmt.Step()
-		check(err)
-		err = stmt.Reset()
-		check(err)
-	}
-	err := stmt.Finalize()
-	check(err)
-	prepStepFin(conn, "COMMIT")
-	// queries
-	tstart := time.Now()
-	for i := 0; i < nqueries; i++ {
-		stmt, err = conn.Prepare(utl.SqlSelectCars)
-		check(err)
-		more, err := stmt.Step()
-		check(err)
-		var nrows int
-		for more {
-			nrows++
-			var id int
-			var nameValue string
-			if stmt.ColumnType(0) != sqlite.SQLITE_NULL {
-				id = stmt.ColumnInt(0)
-			}
-			if stmt.ColumnType(1) != sqlite.SQLITE_NULL {
-				nameValue = stmt.ColumnText(1)
-			}
-			if id < 1 || len(nameValue) < nameLength {
-				log.Fatal("wrong row values")
-			}
-			more, err = stmt.Step()
-			check(err)
-		}
-		if nrows != nplants {
-			log.Fatalf("expected %v rows but was %v", nplants, nrows)
-		}
-	}
-	log.Printf("  queries took %s", utl.Since(tstart))
-	log.Printf("  fsize %v", utl.Fsize(dbfile))
-}
-
-func benchConcurrent(dbfile string, nbooks, nworkers int) {
-	log.Printf("benchConcurrent dbfile=%s, nbooks=%d, nworkers=%d", dbfile, nbooks, nworkers)
-	pool := openPrepare(dbfile, true, nworkers, []string{utl.SqlCreateBooks})
-	defer closePool(pool)
-	// insert
-	tstart := time.Now()
-	conn := pool.Get(nil)
-	prepStepFin(conn, "BEGIN")
-	stmt := conn.Prep(utl.SqlInsertBooks)
-	for i := 0; i < nbooks; i++ {
-		id := i + 1
-		name := fmt.Sprintf("Book %d", id)
-		stmt.BindInt64(1, int64(id))
-		stmt.BindText(2, name)
-		_, err := stmt.Step()
-		check(err)
-		err = stmt.Reset()
-		check(err)
-	}
-	err := stmt.Finalize()
-	check(err)
-	prepStepFin(conn, "COMMIT")
-	pool.Put(conn)
-	// queries
-	tstart = time.Now()
-	var wg sync.WaitGroup
-	wg.Add(nworkers)
-	for w := 0; w < nworkers; w++ {
-		go func(w int) {
-			defer wg.Done()
-			// open db
-			conn := pool.Get(nil)
-			defer pool.Put(conn)
-			// query
-			var nrows int
-			err := sqlitex.Exec(conn, utl.SqlSelectBooks, func(stmt *sqlite.Stmt) error {
-				nrows++
-				var id int
-				var name string
-				if stmt.ColumnType(0) != sqlite.SQLITE_NULL {
-					id = stmt.ColumnInt(0)
-				}
-				if stmt.ColumnType(1) != sqlite.SQLITE_NULL {
-					name = stmt.ColumnText(1)
-				}
-				if id < 1 || len(name) < 5 {
-					log.Fatalf("worker %v: wrong row values", w)
-				}
-				return nil
-			})
-			check(err)
-			if nrows != nbooks {
-				log.Fatalf("worker %v: want %v rows but was %v", w, nbooks, nrows)
-			}
-		}(w)
-	}
-	wg.Wait()
-	log.Printf("  queries took %s", utl.Since(tstart))
-	log.Printf("  fsize %v", utl.Fsize(dbfile))
+	app.MustBeNil(err)
 }
