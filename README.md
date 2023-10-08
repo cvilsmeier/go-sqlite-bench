@@ -149,7 +149,7 @@ Summary
 ------------------------------------------------------------------------------
 
 In benchmark 'Large', sqinn is slower than the other drivers: Shuffling
-gigabytes of data over stdin/out takes time.
+gigabytes of data across process boundaries takes time.
 
 In all other benchmarks, craw and sqinn are the fastest solutions, while
 mattn is a bit slower, and cznic is much slower, especially when used
