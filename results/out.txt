@@ -68,6 +68,29 @@ bench-modernc    -       concurrent/N=4        query       dbsize
 bench-modernc    -       concurrent/N=4         7144     56573952
 bench-modernc    -       concurrent/N=8        query       dbsize
 bench-modernc    -       concurrent/N=8        18674     56573952
+bench-ncruces    - 
+bench-ncruces    -               simple       insert        query       dbsize
+bench-ncruces    -               simple        10073         6080     58687488
+bench-ncruces    -   complex/200/100/20       insert        query       dbsize
+bench-ncruces    -   complex/200/100/20         5159         5380     25354240
+bench-ncruces    -            many/N=10        query       dbsize
+bench-ncruces    -            many/N=10          185        36864
+bench-ncruces    -           many/N=100        query       dbsize
+bench-ncruces    -           many/N=100          829        36864
+bench-ncruces    -          many/N=1000        query       dbsize
+bench-ncruces    -          many/N=1000         7230        94208
+bench-ncruces    -        large/N=50000        query       dbsize
+bench-ncruces    -        large/N=50000          244    501981184
+bench-ncruces    -       large/N=100000        query       dbsize
+bench-ncruces    -       large/N=100000          391   1003761664
+bench-ncruces    -       large/N=200000        query       dbsize
+bench-ncruces    -       large/N=200000          789   2007330816
+bench-ncruces    -       concurrent/N=2        query       dbsize
+bench-ncruces    -       concurrent/N=2         8268     56573952
+bench-ncruces    -       concurrent/N=4        query       dbsize
+bench-ncruces    -       concurrent/N=4        12710     56573952
+bench-ncruces    -       concurrent/N=8        query       dbsize
+bench-ncruces    -       concurrent/N=8        25792     56573952
 bench-sqinn      - 
 bench-sqinn      -               simple       insert        query       dbsize
 bench-sqinn      -               simple          883          641     58687488

@@ -8,16 +8,21 @@ Monibot at https://monibot.io. It's free.
 
 For benchmarks I used the following libraries:
 
-- `github.com/mattn/go-sqlite3`, a CGO-based solution. This library is
+- craw, `crawshaw.io/sqlite`, a CGO-based solution. This is not a `database/sql` driver.
+
+- mattn, `github.com/mattn/go-sqlite3`, a CGO-based solution. This library is
   (still) the de-facto standard and widely used. 
 
-- `modernc.org/sqlite`, a pure Go solution. This is a newer library,
+- modernc, `modernc.org/sqlite`, a pure Go solution. This is a newer library,
   based on the SQLite C code re-written in Go.
 
-- `crawshaw.io/sqlite`, a CGO-based solution. This is not a `database/sql` driver.
+- ncruces, `github.com/ncruces/go-sqlite3`, a pure Go solution based on WASM (?). 
 
-- `github.com/cvilsmeier/sqinn-go`, a solution without CGO. It uses
+- sqinn, `github.com/cvilsmeier/sqinn-go`, a solution without CGO. It uses
   `github.com/cvilsmeier/sqinn` to access SQLite database files.
+
+- zombie, `github.com/zombiezen/go-sqlite`, a rewrite of the crawshaw driver, using the
+  modernc libraries. This is not a `database/sql` driver.
 
 
 The test setup is as follows:
@@ -45,6 +50,8 @@ Database Schema
 
 The test database consist of the following tables and indizes:
 
+    PRAGMA journal_mode=DELETE;
+    PRAGMA synchronous=FULL;
     PRAGMA foreign_keys=1;
     PRAGMA busy_timeout=5000;
 
@@ -90,7 +97,9 @@ Then query all users once.
     craw             1234 ms       608 ms
     mattn            1537 ms      1267 ms
     modernc          5557 ms      1379 ms
+    ncruces         10073 ms      6080 ms
     sqinn             883 ms       641 ms
+    zombie           1862 ms       325 ms
 
 
 ### Complex
@@ -107,7 +116,9 @@ Then query all users, articles and comments in one big JOIN statement.
     craw               729 ms      667 ms
     mattn              911 ms     1387 ms
     modernc           3211 ms     1633 ms
+    ncruces           5159 ms     5380 ms
     sqinn              574 ms      709 ms
+    zombie            1400 ms      507 ms
 
 
 ### Many
@@ -123,7 +134,9 @@ This benchmark is used to simluate a read-heavy use case.
     craw         14 ms        65 ms        520 ms
     mattn        30 ms       130 ms       1143 ms
     modernc      35 ms       135 ms       1180 ms
+    ncruces     185 ms       829 ms       7230 ms
     sqinn        25 ms        83 ms        619 ms
+    zombie       17 ms        36 ms        225 ms
 
 
 ### Large
@@ -139,7 +152,9 @@ This benchmark is used to simluate reading of large (gigabytes) databases.
     craw         197 ms          346 ms          624 ms
     mattn        168 ms          290 ms          591 ms
     modernc      276 ms          514 ms          888 ms
+    ncruces      244 ms          391 ms          789 ms
     sqinn        519 ms         1085 ms         2264 ms
+    zombie       552 ms         1071 ms         2198 ms
 
 
 ### Concurrent
@@ -155,7 +170,9 @@ This benchmark is used to simulate concurrent reads.
     craw       692 ms    1100 ms    1873 ms
     mattn     1516 ms    1840 ms    3483 ms
     modernc   2889 ms    7144 ms   18674 ms
+    ncruces   8268 ms   12710 ms   25792 ms
     sqinn      854 ms    1411 ms    2460 ms
+    zombie     367 ms     646 ms    1140 ms
 
 
 Summary
