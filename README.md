@@ -3,7 +3,7 @@ Benchmarks for Golang SQLite Drivers
 
 This work is sponsored by Monibot - Easy Server and Application Monitoring.
 If you want to monitor your database performance in production, try out
-Monibot at https://monibot.io. It's free.
+Monibot at [https://monibot.io](https://monibot.io?ref=go-sqlite-bench). It's free.
 
 
 For benchmarks I used the following libraries:
