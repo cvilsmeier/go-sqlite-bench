@@ -182,3 +182,8 @@ Summary
 - Crawshaw and Zombiezen are pretty fast.
 - Mattn, although the de-facto standard, is not the best overall solution.
 - SQLite without CGO is possible.
+
+
+This work is sponsored by Monibot - Easy Server and Application Monitoring.
+If you want to monitor your database performance in production, try out
+Monibot at [https://monibot.io](https://monibot.io?ref=go-sqlite-bench). It's free.
