@@ -178,9 +178,7 @@ This benchmark is used to simulate concurrent reads.
 Summary
 ------------------------------------------------------------------------------
 
-In benchmark 'Large', sqinn is slower than the other drivers: Shuffling
-gigabytes of data across process boundaries takes time.
-
-In all other benchmarks, craw and sqinn are the fastest solutions, while
-mattn is a bit slower, and cznic is much slower, especially when used
-concurrently.
+- We cannot declare a winner, it all depends on the use case.
+- Crawshaw and Zombiezen are pretty fast.
+- Mattn, although the de-facto standard, is not the best overall solution.
+- SQLite without CGO is possible.
