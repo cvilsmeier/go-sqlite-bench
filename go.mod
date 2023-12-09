@@ -7,6 +7,7 @@ require (
 	github.com/cvilsmeier/sqinn-go v1.2.0
 	github.com/mattn/go-sqlite3 v1.14.18
 	modernc.org/sqlite v1.27.0
+	zombiezen.com/go/sqlite v1.0.0
 )
 
 require (

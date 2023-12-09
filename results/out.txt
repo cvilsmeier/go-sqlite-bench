@@ -91,3 +91,27 @@ bench-sqinn      -       concurrent/N=4        query       dbsize
 bench-sqinn      -       concurrent/N=4         1411     56573952
 bench-sqinn      -       concurrent/N=8        query       dbsize
 bench-sqinn      -       concurrent/N=8         2460     56573952
+bench-zombie     - 
+bench-zombie     -               simple       insert        query       dbsize
+bench-zombie     -               simple         1862          325     58687488
+bench-zombie     -   complex/200/100/20       insert        query       dbsize
+bench-zombie     -   complex/200/100/20         1400          507     25354240
+bench-zombie     -            many/N=10        query       dbsize
+bench-zombie     -            many/N=10           17        36864
+bench-zombie     -           many/N=100        query       dbsize
+bench-zombie     -           many/N=100           36        36864
+bench-zombie     -          many/N=1000        query       dbsize
+bench-zombie     -          many/N=1000          225        94208
+bench-zombie     -        large/N=50000        query       dbsize
+bench-zombie     -        large/N=50000          552    501981184
+bench-zombie     -       large/N=100000        query       dbsize
+bench-zombie     -       large/N=100000         1071   1003761664
+bench-zombie     -       large/N=200000        query       dbsize
+bench-zombie     -       large/N=200000         2198   2007330816
+bench-zombie     -       concurrent/N=2        query       dbsize
+bench-zombie     -       concurrent/N=2          367     56573952
+bench-zombie     -       concurrent/N=4        query       dbsize
+bench-zombie     -       concurrent/N=4          646     56573952
+bench-zombie     -       concurrent/N=8        query       dbsize
+bench-zombie     -       concurrent/N=8         1140     56573952
+

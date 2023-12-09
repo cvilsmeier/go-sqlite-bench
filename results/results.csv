@@ -3,27 +3,34 @@ craw       ;   1234;   608;
 mattn      ;   1537;  1267;
 modernc    ;   5557;  1379;
 sqinn      ;    883;   641;
+zombie     ;   1862;   325;
 
 Complex    ; insert; query;
 craw       ;    729;   667;
 mattn      ;    911;  1387;
 modernc    ;   3211;  1633;
 sqinn      ;    574;   709;
+zombie     ;   1400;   507;
 
 Many       ; query/N=10; query/N=100; query/N=1000;
 craw       ;         14;          65;          520;
 mattn      ;         30;         130;         1143;
 modernc    ;         35;         135;         1180;
 sqinn      ;         25;          83;          619;
+zombie     ;         17;          36;          225;
 
 Large      ; query/N=50000; query/N=100000; query/N=200000;
 craw       ;           197;            346;            624;
 mattn      ;           168;            290;            591;
 modernc    ;           276;            514;            888;
 sqinn      ;           519;           1085;           2264;
+zombie     ;           552;           1071;           2198;
 
 Concurrent ; query/N=2; query/N=4; query/N=8;
 craw       ;       692;      1100;      1873;
 mattn      ;      1516;      1840;      3483;
 modernc    ;      2889;      7144;     18674;
 sqinn      ;       854;      1411;      2460;
+zombie     ;       367;       646;      1140;
+
+
