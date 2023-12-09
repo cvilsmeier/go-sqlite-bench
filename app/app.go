@@ -65,6 +65,8 @@ const insertCommentSql = "INSERT INTO comments(id,created,articleId,text) VALUES
 
 func initSchema(db Db) {
 	db.Exec(
+		"PRAGMA journal_mode=DELETE",
+		"PRAGMA synchronous=FULL",
 		"PRAGMA foreign_keys=1",
 		"PRAGMA busy_timeout=5000", // 5s busy timeout
 		"CREATE TABLE users ("+
