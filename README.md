@@ -1,6 +1,11 @@
 Benchmarks for Golang SQLite Drivers
 ==============================================================================
 
+This work is sponsored by Monibot - Easy Server and Application Monitoring.
+If you want to monitor your database performance in production, try out
+Monibot at https://monibot.io. It's free.
+
+
 For benchmarks I used the following libraries:
 
 - `github.com/mattn/go-sqlite3`, a CGO-based solution. This library is
@@ -17,13 +22,22 @@ For benchmarks I used the following libraries:
 
 The test setup is as follows:
 
-- OS: Debian/GNU Linux amd64 version 12.2
+- OS: Debian/GNU Linux amd64 version 12.3
 - CPU: 11th Gen Intel(R) Core(TM) i7-1165G7 @ 2.80GHz, 4 physical cores, 8 logical cores
 - RAM: 16GB
 - Disk: 1TB NVME SSD
-- go version go1.21.2 linux/amd64
+- go version go1.21.5 linux/amd64
 
-The benchmark was run on 2023-10-08, with current library versions.
+The benchmark was run on 2023-12-09, with then-current library versions.
+See go.mod for library versions. Each test was run once for warmup.
+The second run was then recorded.
+
+
+A general note on benchmarks:
+
+Do not trust benchmarks, write your own. This specific benchmark is modelled
+after my very own database usage scenarios. Your scenarios may be totally
+different.
 
 
 Database Schema
@@ -73,28 +87,27 @@ Then query all users once.
 
                       insert        query
     -------------------------------------
-    craw             1252 ms       617 ms
-    cznic            5673 ms      1341 ms
-    mattn            1734 ms      1223 ms
-    sqinn             993 ms       664 ms
+    craw             1234 ms       608 ms
+    mattn            1537 ms      1267 ms
+    modernc          5557 ms      1379 ms
+    sqinn             883 ms       641 ms
 
 
 ### Complex
 
 Insert 200 users in one database transaction.
 Then insert 20000 articles (100 articles for each user) in another transaction.
-Then insert 400000 articles (20 comments for each article) in another transaction.
+Then insert 400000 comments (20 comments for each article) in another transaction.
 Then query all users, articles and comments in one big JOIN statement.
 
 ![](results/complex.png)
 
                        insert       query
     -------------------------------------
-    craw               733 ms      668 ms
-    cznic             3198 ms     1633 ms
-    mattn              921 ms     1397 ms
-    sqinn              638 ms      731 ms
-
+    craw               729 ms      667 ms
+    mattn              911 ms     1387 ms
+    modernc           3211 ms     1633 ms
+    sqinn              574 ms      709 ms
 
 
 ### Many
@@ -107,10 +120,10 @@ This benchmark is used to simluate a read-heavy use case.
 
             query/N=10  query/N=100  query/N=1000
     --------------------------------------------------------
-    craw         14 ms        63 ms        524 ms
-    cznic        35 ms       136 ms       1160 ms
-    mattn        30 ms       123 ms       1106 ms
-    sqinn        22 ms        67 ms        671 ms
+    craw         14 ms        65 ms        520 ms
+    mattn        30 ms       130 ms       1143 ms
+    modernc      35 ms       135 ms       1180 ms
+    sqinn        25 ms        83 ms        619 ms
 
 
 ### Large
@@ -123,10 +136,10 @@ This benchmark is used to simluate reading of large (gigabytes) databases.
 
           query/N=50000  query/N=100000  query/N=200000
     ---------------------------------------------------
-    craw         197 ms          325 ms          645 ms
-    cznic        283 ms          600 ms         1027 ms
-    mattn        170 ms          310 ms          606 ms
-    sqinn        573 ms         1095 ms         2769 ms
+    craw         197 ms          346 ms          624 ms
+    mattn        168 ms          290 ms          591 ms
+    modernc      276 ms          514 ms          888 ms
+    sqinn        519 ms         1085 ms         2264 ms
 
 
 ### Concurrent
@@ -139,10 +152,10 @@ This benchmark is used to simulate concurrent reads.
 
             query/N=2  query/N=4  query/N=8
     ---------------------------------------
-    craw       696 ms    1098 ms    1793 ms
-    cznic     2831 ms    7068 ms   17940 ms
-    mattn     1544 ms    1763 ms    3337 ms
-    sqinn      832 ms    1395 ms    2451 ms
+    craw       692 ms    1100 ms    1873 ms
+    mattn     1516 ms    1840 ms    3483 ms
+    modernc   2889 ms    7144 ms   18674 ms
+    sqinn      854 ms    1411 ms    2460 ms
 
 
 Summary
