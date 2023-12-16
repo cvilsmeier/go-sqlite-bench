@@ -18,8 +18,8 @@ github.com/mattn/go-isatty v0.0.16 h1:bq3VjFmv/sOjHtdEhmkEV4x1AJtvUvOJ2PFAZ5+peK
 github.com/mattn/go-isatty v0.0.16/go.mod h1:kYGgaQfpe5nmfYZH+SKPsOc2e4SrIfOl2e/yFXSvRLM=
 github.com/mattn/go-sqlite3 v1.14.18 h1:JL0eqdCOq6DJVNPSvArO/bIV9/P7fbGrV00LZHc+5aI=
 github.com/mattn/go-sqlite3 v1.14.18/go.mod h1:2eHXhiwb8IkHr+BDWZGa96P6+rkvnG63S2DGjv9HUNg=
-github.com/ncruces/go-sqlite3 v0.11.0 h1:PDjs8Ve2Z0GWmHyKQHGUyG78grCXKhiHCUZQI8CqXO8=
-github.com/ncruces/go-sqlite3 v0.11.0/go.mod h1:zaYJ6xP+EQiWJCa3nd3h28cD8DuSIcIqh+LrJMrBN9k=
+github.com/ncruces/go-sqlite3 v0.11.1 h1:r0wxVWikebOg8jU12zkpe33ncPtRalKGGJwYLkoocJc=
+github.com/ncruces/go-sqlite3 v0.11.1/go.mod h1:zaYJ6xP+EQiWJCa3nd3h28cD8DuSIcIqh+LrJMrBN9k=
 github.com/ncruces/julianday v1.0.0 h1:fH0OKwa7NWvniGQtxdJRxAgkBMolni2BjDHaWTxqt7M=
 github.com/ncruces/julianday v1.0.0/go.mod h1:Dusn2KvZrrovOMJuOt0TNXL6tB7U2E8kvza5fFc9G7g=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
