@@ -27,15 +27,15 @@ For benchmarks I used the following libraries:
 
 The test setup is as follows:
 
-- OS: Debian/GNU Linux amd64 version 12.3
+- OS: Debian/GNU Linux amd64 version 12.4
 - CPU: 11th Gen Intel(R) Core(TM) i7-1165G7 @ 2.80GHz, 4 physical cores, 8 logical cores
 - RAM: 16GB
 - Disk: 1TB NVME SSD
 - go version go1.21.5 linux/amd64
 
-The benchmark was run on 2023-12-09, with then-current library versions.
+The benchmark was run on 2023-12-17, with then-current library versions.
 See go.mod for library versions. Each test was run once for warmup.
-The second run was then recorded.
+The second run was then recorded. This is not very scientific.
 
 
 A general note on benchmarks:
@@ -85,6 +85,7 @@ Benchmarks
 Result times are measured in milliseconds. Lower numbers indicate better
 performance.
 
+
 ### Simple
 
 Insert 1 million user rows in one database transaction.
@@ -94,12 +95,12 @@ Then query all users once.
 
                       insert        query
     -------------------------------------
-    craw             1234 ms       608 ms
-    mattn            1537 ms      1267 ms
-    modernc          5557 ms      1379 ms
-    ncruces         10073 ms      6080 ms
-    sqinn             883 ms       641 ms
-    zombie           1862 ms       325 ms
+    craw             1209 ms       594 ms
+    mattn            1733 ms      1352 ms
+    modernc          5554 ms      1300 ms
+    ncruces          4144 ms      1446 ms
+    sqinn             886 ms       638 ms
+    zombie           1969 ms       345 ms
 
 
 ### Complex
@@ -113,12 +114,12 @@ Then query all users, articles and comments in one big JOIN statement.
 
                        insert       query
     -------------------------------------
-    craw               729 ms      667 ms
-    mattn              911 ms     1387 ms
-    modernc           3211 ms     1633 ms
-    ncruces           5159 ms     5380 ms
-    sqinn              574 ms      709 ms
-    zombie            1400 ms      507 ms
+    craw               742 ms      648 ms
+    mattn              927 ms     1401 ms
+    modernc           3088 ms     1685 ms
+    ncruces           2406 ms     1901 ms
+    sqinn              571 ms      710 ms
+    zombie            1437 ms      504 ms
 
 
 ### Many
@@ -130,13 +131,13 @@ This benchmark is used to simluate a read-heavy use case.
 ![](results/many.png)
 
             query/N=10  query/N=100  query/N=1000
-    --------------------------------------------------------
-    craw         14 ms        65 ms        520 ms
-    mattn        30 ms       130 ms       1143 ms
-    modernc      35 ms       135 ms       1180 ms
-    ncruces     185 ms       829 ms       7230 ms
-    sqinn        25 ms        83 ms        619 ms
-    zombie       17 ms        36 ms        225 ms
+    ---------------------------------------------
+    craw         15 ms        63 ms        519 ms
+    mattn        31 ms       131 ms       1172 ms
+    modernc      22 ms       129 ms       1170 ms
+    ncruces      42 ms       166 ms       1368 ms
+    sqinn        20 ms        70 ms        587 ms
+    zombie       17 ms        35 ms        211 ms
 
 
 ### Large
@@ -149,12 +150,12 @@ This benchmark is used to simluate reading of large (gigabytes) databases.
 
           query/N=50000  query/N=100000  query/N=200000
     ---------------------------------------------------
-    craw         197 ms          346 ms          624 ms
-    mattn        168 ms          290 ms          591 ms
-    modernc      276 ms          514 ms          888 ms
-    ncruces      244 ms          391 ms          789 ms
-    sqinn        519 ms         1085 ms         2264 ms
-    zombie       552 ms         1071 ms         2198 ms
+    craw         193 ms          348 ms          597 ms
+    mattn        167 ms          303 ms          524 ms
+    modernc      276 ms          471 ms          836 ms
+    ncruces      207 ms          351 ms          733 ms
+    sqinn        519 ms         1077 ms         2300 ms
+    zombie       576 ms         1109 ms         2170 ms
 
 
 ### Concurrent
@@ -167,12 +168,12 @@ This benchmark is used to simulate concurrent reads.
 
             query/N=2  query/N=4  query/N=8
     ---------------------------------------
-    craw       692 ms    1100 ms    1873 ms
-    mattn     1516 ms    1840 ms    3483 ms
-    modernc   2889 ms    7144 ms   18674 ms
-    ncruces   8268 ms   12710 ms   25792 ms
-    sqinn      854 ms    1411 ms    2460 ms
-    zombie     367 ms     646 ms    1140 ms
+    craw       770 ms    1028 ms    1907 ms
+    mattn     1460 ms    1852 ms    3435 ms
+    modernc   2843 ms    7036 ms   18272 ms
+    ncruces   1541 ms    1883 ms    3925 ms
+    sqinn      832 ms    1292 ms    2430 ms
+    zombie     470 ms     637 ms    1118 ms
 
 
 Summary

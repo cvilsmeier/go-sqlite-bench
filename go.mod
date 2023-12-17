@@ -5,9 +5,9 @@ go 1.21
 require (
 	crawshaw.io/sqlite v0.3.2
 	github.com/cvilsmeier/sqinn-go v1.2.0
-	github.com/mattn/go-sqlite3 v1.14.18
+	github.com/mattn/go-sqlite3 v1.14.19
 	github.com/ncruces/go-sqlite3 v0.11.1
-	modernc.org/sqlite v1.27.0
+	modernc.org/sqlite v1.28.0
 	zombiezen.com/go/sqlite v1.0.0
 )
 
