@@ -10,6 +10,9 @@ For benchmarks I used the following libraries:
 
 - craw, `crawshaw.io/sqlite`, a CGO-based solution. This is not a `database/sql` driver.
 
+- eaton, `github.com/eatonphil/gosqlite`, a CGO-based solution. This is not a
+  `database/sql` driver.
+
 - mattn, `github.com/mattn/go-sqlite3`, a CGO-based solution. This library is
   (still) the de-facto standard and widely used. 
 
@@ -85,6 +88,7 @@ Benchmarks
 Result times are measured in milliseconds. Lower numbers indicate better
 performance.
 
+(TODO: add eaton numbers.)
 
 ### Simple
 

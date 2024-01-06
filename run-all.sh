@@ -6,6 +6,9 @@ date
 ../bench-craw    ../bench.db
 ../bench-craw    ../bench.db
 date
+../bench-eaton   ../bench.db
+../bench-eaton   ../bench.db
+date
 ../bench-mattn   ../bench.db
 ../bench-mattn   ../bench.db
 date
