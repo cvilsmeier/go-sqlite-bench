@@ -1,6 +1,7 @@
 #!/bin/sh
 
-# run every benchmarks twice
+# run every benchmark twice
+# and take results of second run
 
 date
 ../bench-craw    ../bench.db

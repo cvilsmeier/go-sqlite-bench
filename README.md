@@ -36,7 +36,7 @@ The test setup is as follows:
 - Disk: 1TB NVME SSD
 - go version go1.21.5 linux/amd64
 
-The benchmark was run on 2023-12-17, with then-current library versions.
+The benchmark was run on 2024-01-07, with then-current library versions.
 See go.mod for library versions. Each test was run once for warmup.
 The second run was then recorded. This is not very scientific.
 
@@ -88,7 +88,6 @@ Benchmarks
 Result times are measured in milliseconds. Lower numbers indicate better
 performance.
 
-(TODO: add eaton numbers.)
 
 ### Simple
 
@@ -97,14 +96,15 @@ Then query all users once.
 
 ![](results/simple.png)
 
-                      insert        query
-    -------------------------------------
-    craw             1209 ms       594 ms
-    mattn            1733 ms      1352 ms
-    modernc          5554 ms      1300 ms
-    ncruces          4144 ms      1446 ms
-    sqinn             886 ms       638 ms
-    zombie           1969 ms       345 ms
+                     insert      query
+    ----------------------------------
+    craw            1235 ms     603 ms
+    eaton           1286 ms     778 ms
+    mattn           1696 ms    1236 ms
+    modernc         5615 ms    1236 ms
+    ncruces         4082 ms    1370 ms
+    sqinn            942 ms     648 ms
+    zombie          1941 ms     332 ms
 
 
 ### Complex
@@ -118,12 +118,13 @@ Then query all users, articles and comments in one big JOIN statement.
 
                        insert       query
     -------------------------------------
-    craw               742 ms      648 ms
-    mattn              927 ms     1401 ms
-    modernc           3088 ms     1685 ms
-    ncruces           2406 ms     1901 ms
-    sqinn              571 ms      710 ms
-    zombie            1437 ms      504 ms
+    craw               763 ms      668 ms
+    eaton              725 ms      859 ms
+    mattn              885 ms     1430 ms
+    modernc           3083 ms     1569 ms
+    ncruces           2428 ms     1857 ms
+    sqinn              576 ms      723 ms
+    zombie            1452 ms      502 ms
 
 
 ### Many
@@ -136,12 +137,13 @@ This benchmark is used to simluate a read-heavy use case.
 
             query/N=10  query/N=100  query/N=1000
     ---------------------------------------------
-    craw         15 ms        63 ms        519 ms
-    mattn        31 ms       131 ms       1172 ms
-    modernc      22 ms       129 ms       1170 ms
-    ncruces      42 ms       166 ms       1368 ms
-    sqinn        20 ms        70 ms        587 ms
-    zombie       17 ms        35 ms        211 ms
+    craw         15 ms        62 ms        520 ms
+    eaton        25 ms        83 ms        670 ms
+    mattn        31 ms       124 ms       1093 ms
+    modernc      34 ms       130 ms       1096 ms
+    ncruces      46 ms       161 ms       1325 ms
+    sqinn        37 ms        64 ms        603 ms
+    zombie       15 ms        35 ms        213 ms
 
 
 ### Large
@@ -154,12 +156,14 @@ This benchmark is used to simluate reading of large (gigabytes) databases.
 
           query/N=50000  query/N=100000  query/N=200000
     ---------------------------------------------------
-    craw         193 ms          348 ms          597 ms
-    mattn        167 ms          303 ms          524 ms
-    modernc      276 ms          471 ms          836 ms
-    ncruces      207 ms          351 ms          733 ms
-    sqinn        519 ms         1077 ms         2300 ms
-    zombie       576 ms         1109 ms         2170 ms
+    craw         197 ms          332 ms          579 ms
+    eaton        194 ms          344 ms          665 ms
+    mattn        170 ms          301 ms          588 ms
+    modernc      279 ms          487 ms          877 ms
+    ncruces      233 ms          409 ms          769 ms
+    sqinn        556 ms         1082 ms         2273 ms
+    zombie       575 ms         1051 ms         2109 ms
+
 
 
 ### Concurrent
@@ -172,12 +176,13 @@ This benchmark is used to simulate concurrent reads.
 
             query/N=2  query/N=4  query/N=8
     ---------------------------------------
-    craw       770 ms    1028 ms    1907 ms
-    mattn     1460 ms    1852 ms    3435 ms
-    modernc   2843 ms    7036 ms   18272 ms
-    ncruces   1541 ms    1883 ms    3925 ms
-    sqinn      832 ms    1292 ms    2430 ms
-    zombie     470 ms     637 ms    1118 ms
+    craw       700 ms     993 ms    1898 ms
+    eaton      816 ms    1264 ms    2264 ms
+    mattn     1377 ms    1784 ms    3353 ms
+    modernc   2862 ms    7164 ms   18474 ms
+    ncruces   1540 ms    1976 ms    3837 ms
+    sqinn      843 ms    1383 ms    2152 ms
+    zombie     464 ms     624 ms    1121 ms
 
 
 Summary
@@ -185,7 +190,6 @@ Summary
 
 - We cannot declare a winner, it all depends on the use case.
 - Crawshaw and Zombiezen are pretty fast.
-- Mattn, although the de-facto standard, is not the best overall solution.
 - SQLite without CGO is possible.
 
 
