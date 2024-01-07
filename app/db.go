@@ -4,6 +4,7 @@ import "time"
 
 // Db is the database interface.
 type Db interface {
+	DriverName() string
 	Exec(sqls ...string)
 	InsertUsers(insertSql string, users []User)
 	InsertArticles(insertSql string, articles []Article)

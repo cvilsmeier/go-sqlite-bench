@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -14,9 +13,6 @@ import (
 func Run(makeDb func(dbfile string) Db) {
 	log.SetOutput(os.Stdout)
 	log.SetFlags(0)
-	exename, _ := os.Executable()
-	exename = filepath.Base(exename)
-	log.SetPrefix(fmt.Sprintf("%-16s - ", exename))
 	log.Print("")
 	flag.Parse()
 	dbfile := flag.Arg(0)
@@ -133,9 +129,10 @@ func benchSimple(dbfile string, verbose bool, makeDb func(dbfile string) Db) {
 		MustBeEqual(true, u.Active)
 	}
 	// print results
-	label := "simple"
-	log.Printf("%20s %12s %12s %12s", label, "insert", "query", "dbsize")
-	log.Printf("%20s %12d %12d %12d", label, insertMillis, queryMillis, dbsize(dbfile))
+	bench := "simple"
+	log.Printf("%s - insert - %10s - %d", bench, db.DriverName(), insertMillis)
+	log.Printf("%s - query  - %10s - %d", bench, db.DriverName(), queryMillis)
+	log.Printf("%s - dbsize - %10s - %d", bench, db.DriverName(), dbsize(dbfile))
 }
 
 // Insert 200 users in one database transaction.
@@ -250,9 +247,10 @@ func benchComplex(dbfile string, verbose bool, makeDb func(dbfile string) Db) {
 		}
 	}
 	// print results
-	label := fmt.Sprintf("complex/%d/%d/%d", nusers, narticlesPerUser, ncommentsPerArticle)
-	log.Printf("%20s %12s %12s %12s", label, "insert", "query", "dbsize")
-	log.Printf("%20s %12d %12d %12d", label, insertMillis, queryMillis, dbsize(dbfile))
+	bench := "complex"
+	log.Printf("%s - insert - %10s - %d", bench, db.DriverName(), insertMillis)
+	log.Printf("%s - query  - %10s - %d", bench, db.DriverName(), queryMillis)
+	log.Printf("%s - dbsize - %10s - %d", bench, db.DriverName(), dbsize(dbfile))
 }
 
 // Insert N users in one database transaction.
@@ -298,9 +296,10 @@ func benchMany(dbfile string, verbose bool, nusers int, makeDb func(dbfile strin
 		MustBeEqual(true, u.Active)
 	}
 	// print results
-	label := fmt.Sprintf("many/N=%d", nusers)
-	log.Printf("%20s %12s %12s", label, "query", "dbsize")
-	log.Printf("%20s %12d %12d", label, queryMillis, dbsize(dbfile))
+	bench := fmt.Sprintf("many/%04d", nusers)
+	log.Printf("%s - insert - %10s - %d", bench, db.DriverName(), insertMillis)
+	log.Printf("%s - query  - %10s - %d", bench, db.DriverName(), queryMillis)
+	log.Printf("%s - dbsize - %10s - %d", bench, db.DriverName(), dbsize(dbfile))
 }
 
 // Insert 10000 users with N bytes of row content.
@@ -312,6 +311,7 @@ func benchLarge(dbfile string, verbose bool, nsize int, makeDb func(dbfile strin
 	defer db.Close()
 	initSchema(db)
 	// insert user with large emails
+	t0 := time.Now()
 	base := time.Date(2023, 10, 1, 10, 0, 0, 0, time.Local)
 	const nusers = 10_000
 	var users []User
@@ -324,8 +324,9 @@ func benchLarge(dbfile string, verbose bool, nsize int, makeDb func(dbfile strin
 		))
 	}
 	db.InsertUsers(insertUserSql, users)
+	insertMillis := millisSince(t0)
 	// query users
-	t0 := time.Now()
+	t0 = time.Now()
 	users = db.FindUsers("SELECT id,created,email,active FROM users ORDER BY id")
 	MustBeEqual(len(users), nusers)
 	queryMillis := millisSince(t0)
@@ -340,9 +341,10 @@ func benchLarge(dbfile string, verbose bool, nsize int, makeDb func(dbfile strin
 		MustBeEqual(true, u.Active)
 	}
 	// print results
-	label := fmt.Sprintf("large/N=%d", nsize)
-	log.Printf("%20s %12s %12s", label, "query", "dbsize")
-	log.Printf("%20s %12d %12d", label, queryMillis, dbsize(dbfile))
+	bench := fmt.Sprintf("large/%06d", nsize)
+	log.Printf("%s - insert - %10s - %d", bench, db.DriverName(), insertMillis)
+	log.Printf("%s - query  - %10s - %d", bench, db.DriverName(), queryMillis)
+	log.Printf("%s - dbsize - %10s - %d", bench, db.DriverName(), dbsize(dbfile))
 }
 
 // Insert one million users.
@@ -351,6 +353,7 @@ func benchLarge(dbfile string, verbose bool, nsize int, makeDb func(dbfile strin
 func benchConcurrent(dbfile string, verbose bool, ngoroutines int, makeDb func(dbfile string) Db) {
 	removeDbfiles(dbfile)
 	db1 := makeDb(dbfile)
+	driverName := db1.DriverName()
 	initSchema(db1)
 	// insert many users
 	base := time.Date(2023, 10, 1, 10, 0, 0, 0, time.Local)
@@ -364,10 +367,12 @@ func benchConcurrent(dbfile string, verbose bool, ngoroutines int, makeDb func(d
 			true,                                   // Active
 		))
 	}
+	t0 := time.Now()
 	db1.InsertUsers(insertUserSql, users)
 	db1.Close()
+	insertMillis := millisSince(t0)
 	// query users in N goroutines
-	t0 := time.Now()
+	t0 = time.Now()
 	var wg sync.WaitGroup
 	for i := 0; i < ngoroutines; i++ {
 		wg.Add(1)
@@ -397,7 +402,8 @@ func benchConcurrent(dbfile string, verbose bool, ngoroutines int, makeDb func(d
 		log.Printf("  query took %d ms", queryMillis)
 	}
 	// print results
-	label := fmt.Sprintf("concurrent/N=%d", ngoroutines)
-	log.Printf("%20s %12s %12s", label, "query", "dbsize")
-	log.Printf("%20s %12d %12d", label, queryMillis, dbsize(dbfile))
+	bench := fmt.Sprintf("concurrent/%d", ngoroutines)
+	log.Printf("%s - insert - %10s - %d", bench, driverName, insertMillis)
+	log.Printf("%s - query  - %10s - %d", bench, driverName, queryMillis)
+	log.Printf("%s - dbsize - %10s - %d", bench, driverName, dbsize(dbfile))
 }

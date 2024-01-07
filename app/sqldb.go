@@ -6,13 +6,18 @@ import (
 
 // SqlDb is a Db implementation that uses database/sql package.
 type SqlDb struct {
-	db *sql.DB
+	driverName string
+	db         *sql.DB
 }
 
 var _ Db = (*SqlDb)(nil)
 
-func NewSqlDb(db *sql.DB) *SqlDb {
-	return &SqlDb{db}
+func NewSqlDb(driverName string, db *sql.DB) *SqlDb {
+	return &SqlDb{driverName, db}
+}
+
+func (d *SqlDb) DriverName() string {
+	return d.driverName
 }
 
 func (d *SqlDb) Exec(sqls ...string) {

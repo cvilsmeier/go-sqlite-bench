@@ -31,6 +31,10 @@ func newDb(dbfile string) app.Db {
 	return &dbImpl{pool}
 }
 
+func (d *dbImpl) DriverName() string {
+	return "craw"
+}
+
 func (d *dbImpl) Exec(sqls ...string) {
 	conn := d.pool.Get(context.TODO())
 	defer d.pool.Put(conn)

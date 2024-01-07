@@ -11,6 +11,6 @@ func main() {
 	app.Run(func(dbfile string) app.Db {
 		db, err := sql.Open("sqlite", dbfile)
 		app.MustBeNil(err)
-		return app.NewSqlDb(db)
+		return app.NewSqlDb("modernc", db)
 	})
 }

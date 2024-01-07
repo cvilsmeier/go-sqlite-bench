@@ -23,6 +23,10 @@ func newDb(dbfile string) app.Db {
 	return &dbImpl{conn}
 }
 
+func (d *dbImpl) DriverName() string {
+	return "zombie"
+}
+
 func (d *dbImpl) Exec(sqls ...string) {
 	for _, s := range sqls {
 		d.exec(s)

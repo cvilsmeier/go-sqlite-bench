@@ -11,7 +11,7 @@ For benchmarks I used the following libraries:
 - craw, `crawshaw.io/sqlite`, a CGO-based solution. This is not a `database/sql` driver.
 
 - eaton, `github.com/eatonphil/gosqlite`, a CGO-based solution. This is not a
-  `database/sql` driver.
+  `database/sql` driver. (addded by @c4rlo)
 
 - mattn, `github.com/mattn/go-sqlite3`, a CGO-based solution. This library is
   (still) the de-facto standard and widely used. 

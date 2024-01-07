@@ -26,6 +26,10 @@ func newDb(dbfile string) app.Db {
 	return &dbImpl{sq}
 }
 
+func (d *dbImpl) DriverName() string {
+	return "sqinn"
+}
+
 func (d *dbImpl) Exec(sqls ...string) {
 	for _, s := range sqls {
 		d.sq.MustExecOne(s)
