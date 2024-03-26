@@ -30,13 +30,13 @@ For benchmarks I used the following libraries:
 
 The test setup is as follows:
 
-- OS: Debian/GNU Linux amd64 version 12.4
+- OS: Debian/GNU Linux amd64 version 12.5
 - CPU: 11th Gen Intel(R) Core(TM) i7-1165G7 @ 2.80GHz, 4 physical cores, 8 logical cores
 - RAM: 16GB
 - Disk: 1TB NVME SSD
-- go version go1.21.5 linux/amd64
+- go version go1.22.1 linux/amd64
 
-The benchmark was run on 2024-01-07, with then-current library versions.
+The benchmark was run on 2024-03-26, with then-current library versions.
 See go.mod for library versions. Each test was run once for warmup.
 The second run was then recorded. This is not very scientific.
 
