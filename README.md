@@ -11,21 +11,21 @@ For benchmarks I used the following libraries:
 - craw, `crawshaw.io/sqlite`, a CGO-based solution. This is not a `database/sql` driver.
 
 - eaton, `github.com/eatonphil/gosqlite`, a CGO-based solution. This is not a
-  `database/sql` driver. (addded by @c4rlo)
+    `database/sql` driver. (addded by @c4rlo)
 
 - mattn, `github.com/mattn/go-sqlite3`, a CGO-based solution. This library is
-  (still) the de-facto standard and widely used. 
+    (still) the de-facto standard and widely used. 
 
 - modernc, `modernc.org/sqlite`, a pure Go solution. This is a newer library,
-  based on the SQLite C code re-written in Go.
+    based on the SQLite C code re-written in Go.
 
 - ncruces, `github.com/ncruces/go-sqlite3`, a pure Go solution based on WASM (?). 
 
 - sqinn, `github.com/cvilsmeier/sqinn-go`, a solution without CGO. It uses
-  `github.com/cvilsmeier/sqinn` to access SQLite database files.
+    `github.com/cvilsmeier/sqinn` to access SQLite database files.
 
 - zombie, `github.com/zombiezen/go-sqlite`, a rewrite of the crawshaw driver, using the
-  modernc libraries. This is not a `database/sql` driver.
+    modernc libraries. This is not a `database/sql` driver.
 
 
 The test setup is as follows:
@@ -96,15 +96,15 @@ Then query all users once.
 
 ![](results/simple.png)
 
-                     insert      query
-    ----------------------------------
-    craw            1235 ms     603 ms
-    eaton           1286 ms     778 ms
-    mattn           1696 ms    1236 ms
-    modernc         5615 ms    1236 ms
-    ncruces         4082 ms    1370 ms
-    sqinn            942 ms     648 ms
-    zombie          1941 ms     332 ms
+    Simple;      insert;  query;
+    craw;          1213;    560;
+    eaton;         1165;    800;
+    mattn;         1583;   1089;
+    modernc;       5654;   1193;
+    ncruces;       3331;    933;
+    sqinn;          893;    615;
+    zombie;        1885;    310;
+
 
 
 ### Complex
@@ -116,15 +116,15 @@ Then query all users, articles and comments in one big JOIN statement.
 
 ![](results/complex.png)
 
-                       insert       query
-    -------------------------------------
-    craw               763 ms      668 ms
-    eaton              725 ms      859 ms
-    mattn              885 ms     1430 ms
-    modernc           3083 ms     1569 ms
-    ncruces           2428 ms     1857 ms
-    sqinn              576 ms      723 ms
-    zombie            1452 ms      502 ms
+    Complex;     insert;  query;
+    craw;           720;    601;
+    eaton;          706;    805;
+    mattn;          905;   1213;
+    modernc;       3114;   1510;
+    ncruces;       1954;   1228;
+    sqinn;          571;    713;
+    zombie;        1359;    494;
+
 
 
 ### Many
@@ -135,15 +135,15 @@ This benchmark is used to simluate a read-heavy use case.
 
 ![](results/many.png)
 
-            query/N=10  query/N=100  query/N=1000
-    ---------------------------------------------
-    craw         15 ms        62 ms        520 ms
-    eaton        25 ms        83 ms        670 ms
-    mattn        31 ms       124 ms       1093 ms
-    modernc      34 ms       130 ms       1096 ms
-    ncruces      46 ms       161 ms       1325 ms
-    sqinn        37 ms        64 ms        603 ms
-    zombie       15 ms        35 ms        213 ms
+    Many;        query/N=10; query/N=100; query/N=1000;
+    craw;                13;          61;          480;
+    eaton;               25;          80;          657;
+    mattn;               32;         123;          996;
+    modernc;             24;         128;         1074;
+    ncruces;             40;         115;          876;
+    sqinn;               19;          64;          577;
+    zombie;              16;          35;          267;
+
 
 
 ### Large
@@ -154,15 +154,15 @@ This benchmark is used to simluate reading of large (gigabytes) databases.
 
 ![](results/large.png)
 
-          query/N=50000  query/N=100000  query/N=200000
-    ---------------------------------------------------
-    craw         197 ms          332 ms          579 ms
-    eaton        194 ms          344 ms          665 ms
-    mattn        170 ms          301 ms          588 ms
-    modernc      279 ms          487 ms          877 ms
-    ncruces      233 ms          409 ms          769 ms
-    sqinn        556 ms         1082 ms         2273 ms
-    zombie       575 ms         1051 ms         2109 ms
+    Large;       query/N=50000; query/N=100000; query/N=200000;
+    craw;                  197;            321;            716;
+    eaton;                 201;            331;            577;
+    mattn;                 159;            247;            486;
+    modernc;               252;            668;           1187;
+    ncruces;               179;            323;            587;
+    sqinn;                 511;           1060;           2284;
+    zombie;                185;            582;           1030;
+
 
 
 
@@ -174,15 +174,15 @@ This benchmark is used to simulate concurrent reads.
 
 ![](results/concurrent.png)
 
-            query/N=2  query/N=4  query/N=8
-    ---------------------------------------
-    craw       700 ms     993 ms    1898 ms
-    eaton      816 ms    1264 ms    2264 ms
-    mattn     1377 ms    1784 ms    3353 ms
-    modernc   2862 ms    7164 ms   18474 ms
-    ncruces   1540 ms    1976 ms    3837 ms
-    sqinn      843 ms    1383 ms    2152 ms
-    zombie     464 ms     624 ms    1121 ms
+    Concurrent;  query/N=2; query/N=4; query/N=8;
+    craw;              584;       963;      1692;
+    eaton;             854;      1260;      2109;
+    mattn;            1243;      1475;      2972;
+    modernc;          2614;      7142;     18362;
+    ncruces;          1043;      1444;      2676;
+    sqinn;             660;      1349;      2287;
+    zombie;            343;       694;      1121;
+
 
 
 Summary
