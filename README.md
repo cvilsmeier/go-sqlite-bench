@@ -1,9 +1,8 @@
 Benchmarks for Golang SQLite Drivers
 ==============================================================================
 
-This work is sponsored by Monibot - Easy Server and Application Monitoring.
-Try out Monibot at [https://monibot.io](https://monibot.io?ref=go-sqlite-bench).
-It's free.
+This work is sponsored by Monibot - Server and Application Monitoring.
+Try out Monibot for free at [https://monibot.io](https://monibot.io?ref=go-sqlite-bench).
 
 
 For benchmarks I used the following libraries:
@@ -30,22 +29,32 @@ For benchmarks I used the following libraries:
 
 The test setup is as follows:
 
-- OS: Debian/GNU Linux amd64 version 12.5
-- CPU: 11th Gen Intel(R) Core(TM) i7-1165G7 @ 2.80GHz, 4 physical cores, 8 logical cores
+- OS: Debian/GNU Linux amd64 version 12.6
+- CPU: 11th Gen Intel(R) Core(TM) i7-1165G7 @ 2.80GHz, 8 cores
 - RAM: 16GB
 - Disk: 1TB NVME SSD
-- go version go1.22.1 linux/amd64
+- go version go1.22.6 linux/amd64
 
-The benchmark was run on 2024-03-26, with then-current library versions.
-See go.mod for library versions. Each test was run once for warmup.
-The second run was then recorded. This is not very scientific.
+The benchmark was run on 2024-08-15, with current library versions,
+see go.mod file. Each test was run once for warmup. The second run was then
+recorded. This is not very scientific.
 
 
-A general note on benchmarks:
+A general note on benchmarks and this repository:
+------------------------------------------------------------------------------
 
 Do not trust benchmarks, write your own. This specific benchmark is modelled
 after my very own database usage scenarios. Your scenarios may be totally
 different.
+
+This is also the reason this repository is open-source, but not open-contribution.
+There are many good ideas to improve this benchmark: More driver libs, different
+lib versions, windows, macOS, different SQLite journal- and sync modes, etc.
+
+Unfortunately, supporting all this would take too much time for me.
+I read all proposals but have to, unfortunately, be very selective as to what
+to include in this project.
+
 
 
 Database Schema
@@ -82,7 +91,7 @@ The test database consist of the following tables and indizes:
     CREATE INDEX comments_articleId ON comments(articleId);
 
 
-Benchmarks
+Benchmark Results
 ------------------------------------------------------------------------------
 
 Result times are measured in milliseconds. Lower numbers indicate better
@@ -97,14 +106,13 @@ Then query all users once.
 ![](results/simple.png)
 
     Simple;      insert;  query;
-    craw;          1213;    560;
-    eaton;         1165;    800;
-    mattn;         1583;   1089;
-    modernc;       5654;   1193;
-    ncruces;       3331;    933;
-    sqinn;          893;    615;
-    zombie;        1885;    310;
-
+    craw;          1211;    566;
+    eaton;         1156;    713;
+    mattn;         1641;   1119;
+    modernc;       5662;   1170;
+    ncruces;       3304;   1015;
+    sqinn;          919;    590;
+    zombie;        1932;    314;
 
 
 ### Complex
@@ -117,14 +125,13 @@ Then query all users, articles and comments in one big JOIN statement.
 ![](results/complex.png)
 
     Complex;     insert;  query;
-    craw;           720;    601;
-    eaton;          706;    805;
-    mattn;          905;   1213;
-    modernc;       3114;   1510;
-    ncruces;       1954;   1228;
-    sqinn;          571;    713;
-    zombie;        1359;    494;
-
+    craw;           701;    602;
+    eaton;          733;    807;
+    mattn;          891;   1268;
+    modernc;       3112;   1515;
+    ncruces;       1956;   1271;
+    sqinn;          610;    787;
+    zombie;        1470;    512;
 
 
 ### Many
@@ -136,14 +143,13 @@ This benchmark is used to simluate a read-heavy use case.
 ![](results/many.png)
 
     Many;        query/N=10; query/N=100; query/N=1000;
-    craw;                13;          61;          480;
-    eaton;               25;          80;          657;
-    mattn;               32;         123;          996;
-    modernc;             24;         128;         1074;
-    ncruces;             40;         115;          876;
-    sqinn;               19;          64;          577;
-    zombie;              16;          35;          267;
-
+    craw;                13;          61;          520;
+    eaton;               25;          80;          637;
+    mattn;               31;         109;          985;
+    modernc;             35;         125;         1059;
+    ncruces;             43;         117;          967;
+    sqinn;               36;          69;          617;
+    zombie;              17;          38;          215;
 
 
 ### Large
@@ -155,15 +161,13 @@ This benchmark is used to simluate reading of large (gigabytes) databases.
 ![](results/large.png)
 
     Large;       query/N=50000; query/N=100000; query/N=200000;
-    craw;                  197;            321;            716;
-    eaton;                 201;            331;            577;
-    mattn;                 159;            247;            486;
-    modernc;               252;            668;           1187;
-    ncruces;               179;            323;            587;
-    sqinn;                 511;           1060;           2284;
-    zombie;                185;            582;           1030;
-
-
+    craw;                  198;            350;            672;
+    eaton;                 182;            324;            583;
+    mattn;                 158;            321;            516;
+    modernc;               217;            698;           1245;
+    ncruces;               190;            360;            648;
+    sqinn;                 550;           1086;           2507;
+    zombie;                169;            554;           1087;
 
 
 ### Concurrent
@@ -175,14 +179,13 @@ This benchmark is used to simulate concurrent reads.
 ![](results/concurrent.png)
 
     Concurrent;  query/N=2; query/N=4; query/N=8;
-    craw;              584;       963;      1692;
-    eaton;             854;      1260;      2109;
-    mattn;            1243;      1475;      2972;
-    modernc;          2614;      7142;     18362;
-    ncruces;          1043;      1444;      2676;
-    sqinn;             660;      1349;      2287;
-    zombie;            343;       694;      1121;
-
+    craw;              670;      1006;      1656;
+    eaton;             830;      1299;      2036;
+    mattn;            1287;      1606;      2917;
+    modernc;          2811;      7046;     17849;
+    ncruces;          1172;      1534;      2697;
+    sqinn;             638;      1203;      2143;
+    zombie;            342;       569;      1087;
 
 
 Summary
@@ -193,6 +196,5 @@ Summary
 - SQLite without CGO is possible.
 
 
-This work is sponsored by Monibot - Easy Server and Application Monitoring.
-Try out Monibot at [https://monibot.io](https://monibot.io?ref=go-sqlite-bench).
-It's free.
+This work is sponsored by Monibot - Server and Application Monitoring.
+Try out Monibot for free at [https://monibot.io](https://monibot.io?ref=go-sqlite-bench).

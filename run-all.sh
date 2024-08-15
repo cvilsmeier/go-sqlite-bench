@@ -1,12 +1,15 @@
 #!/bin/sh
 
-# exit on error
+# failfast
 set -e
 
-# run in parent directory (where binaries are built)
-cd ..
+# must have _build directory
+stat _build > /dev/null
 
-# run every benchmark twice and take results of second run
+# enter _build directory
+cd _build
+
+# run every benchmark twice
 date && ./bench-craw    bench.db  && ./bench-craw    bench.db
 date && ./bench-eaton   bench.db  && ./bench-eaton   bench.db
 date && ./bench-mattn   bench.db  && ./bench-mattn   bench.db
