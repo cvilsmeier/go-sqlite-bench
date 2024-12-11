@@ -12,6 +12,9 @@ For benchmarks I used the following libraries:
 - eaton, `github.com/eatonphil/gosqlite`, a CGO-based solution. This is not a
     `database/sql` driver. (addded by @c4rlo)
 
+- glebarez, `github.com/glebarez/go-sqlite`, a pure Go solution. This is a newer library,
+    based on the SQLite C code re-written in Go.
+
 - mattn, `github.com/mattn/go-sqlite3`, a CGO-based solution. This library is
     (still) the de-facto standard and widely used. 
 

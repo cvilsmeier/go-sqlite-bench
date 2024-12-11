@@ -6,6 +6,7 @@ require (
 	crawshaw.io/sqlite v0.3.2
 	github.com/cvilsmeier/sqinn-go v1.2.0
 	github.com/eatonphil/gosqlite v0.10.0
+	github.com/glebarez/go-sqlite v1.22.0
 	github.com/mattn/go-sqlite3 v1.14.22
 	github.com/ncruces/go-sqlite3 v0.18.0
 	modernc.org/sqlite v1.32.0

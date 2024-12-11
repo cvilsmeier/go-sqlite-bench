@@ -13,6 +13,7 @@ mkdir _build
 # build all
 echo build craw     && go build -o _build ./cmd/bench-craw
 echo build eaton    && go build -o _build ./cmd/bench-eaton
+echo build glebarez && go build -o _build ./cmd/bench-glebarez
 echo build mattn    && go build -o _build ./cmd/bench-mattn
 echo build modernc  && go build -o _build ./cmd/bench-modernc
 echo build ncruces  && go build -o _build ./cmd/bench-ncruces
