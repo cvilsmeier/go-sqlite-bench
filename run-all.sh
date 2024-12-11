@@ -19,3 +19,8 @@ date && ./bench-ncruces  bench.db  && ./bench-ncruces  bench.db
 date && ./bench-sqinn    bench.db  && ./bench-sqinn    bench.db
 date && ./bench-zombie   bench.db  && ./bench-zombie   bench.db
 date
+
+# for collecting results, run like this:
+#
+# $ ./run-all.sh > out.txt
+

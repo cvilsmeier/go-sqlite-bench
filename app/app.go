@@ -14,6 +14,8 @@ func Run(makeDb func(dbfile string) Db) {
 	log.SetOutput(os.Stdout)
 	log.SetFlags(0)
 	log.Print("")
+	benchmarks := "simple,complex,many,large,concurrent"
+	flag.StringVar(&benchmarks, "benchmarks", benchmarks, "specify benchmarks to run, commaseparated")
 	flag.Parse()
 	dbfile := flag.Arg(0)
 	if dbfile == "" {
@@ -25,30 +27,23 @@ func Run(makeDb func(dbfile string) Db) {
 		log.Printf("dbfile %q", dbfile)
 	}
 	// run benchmarks
-	benchmarks := map[string]bool{
-		"simple":     true,
-		"complex":    true,
-		"many":       true,
-		"large":      true,
-		"concurrent": true,
-	}
-	if benchmarks["simple"] {
+	if strings.Contains(benchmarks, "simple") {
 		benchSimple(dbfile, verbose, makeDb)
 	}
-	if benchmarks["complex"] {
+	if strings.Contains(benchmarks, "complex") {
 		benchComplex(dbfile, verbose, makeDb)
 	}
-	if benchmarks["many"] {
+	if strings.Contains(benchmarks, "many") {
 		benchMany(dbfile, verbose, 10, makeDb)
 		benchMany(dbfile, verbose, 100, makeDb)
 		benchMany(dbfile, verbose, 1_000, makeDb)
 	}
-	if benchmarks["large"] {
+	if strings.Contains(benchmarks, "large") {
 		benchLarge(dbfile, verbose, 50_000, makeDb)
 		benchLarge(dbfile, verbose, 100_000, makeDb)
 		benchLarge(dbfile, verbose, 200_000, makeDb)
 	}
-	if benchmarks["concurrent"] {
+	if strings.Contains(benchmarks, "concurrent") {
 		benchConcurrent(dbfile, verbose, 2, makeDb)
 		benchConcurrent(dbfile, verbose, 4, makeDb)
 		benchConcurrent(dbfile, verbose, 8, makeDb)
