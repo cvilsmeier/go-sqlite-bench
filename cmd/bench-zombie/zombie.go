@@ -18,7 +18,7 @@ type dbImpl struct {
 var _ app.Db = (*dbImpl)(nil)
 
 func newDb(dbfile string) app.Db {
-	conn, err := sqlite.OpenConn(dbfile, sqlite.OpenReadWrite, sqlite.OpenCreate)
+	conn, err := sqlite.OpenConn(dbfile, sqlite.OpenReadWrite, sqlite.OpenCreate, sqlite.OpenPrivateCache)
 	app.MustBeNil(err)
 	return &dbImpl{conn}
 }
@@ -37,10 +37,6 @@ func (d *dbImpl) InsertUsers(insertSql string, users []app.User) {
 	d.exec("BEGIN")
 	stmt := d.conn.Prep(insertSql)
 	for _, u := range users {
-		//	Id        int
-		//	Created   time.Time
-		//	Email     string
-		//	Active    bool
 		stmt.BindInt64(1, int64(u.Id))
 		stmt.BindInt64(2, app.BindTime(u.Created))
 		stmt.BindText(3, u.Email)

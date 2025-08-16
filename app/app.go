@@ -15,7 +15,7 @@ func Run(makeDb func(dbfile string) Db) {
 	log.SetFlags(0)
 	log.Print("")
 	benchmarks := "simple,complex,many,large,concurrent"
-	flag.StringVar(&benchmarks, "benchmarks", benchmarks, "specify benchmarks to run, commaseparated")
+	flag.StringVar(&benchmarks, "benchmarks", benchmarks, "specify benchmarks to run, comma separated")
 	flag.Parse()
 	dbfile := flag.Arg(0)
 	if dbfile == "" {
@@ -119,8 +119,8 @@ func benchSimple(dbfile string, verbose bool, makeDb func(dbfile string) Db) {
 	// validate query result
 	for i, u := range users {
 		MustBeEqual(i+1, u.Id)
-		Must(2023 <= u.Created.Year() && u.Created.Year() <= 2025, "wrong created year in %v", u.Created)
-		MustBeEqual("user0", u.Email[0:5])
+		MustBeEqual(base.Add(time.Duration(i)*time.Minute), u.Created)
+		MustBeEqual(fmt.Sprintf("user%08d@example.com", i+1), u.Email)
 		MustBeEqual(true, u.Active)
 	}
 	// print results
@@ -155,30 +155,30 @@ func benchComplex(dbfile string, verbose bool, makeDb func(dbfile string) Db) {
 	var userId int
 	var articleId int
 	var commentId int
-	for u := 0; u < nusers; u++ {
+	for range nusers {
 		userId++
 		user := NewUser(
-			userId,                                   // Id
-			base.Add(time.Duration(u)*time.Minute),   // Created
-			fmt.Sprintf("user%08d@example.com", u+1), // Email
-			u%2 == 0,                                 // Active
+			userId, // id
+			base.Add(time.Duration(userId)*time.Minute), // created
+			fmt.Sprintf("user%08d@example.com", userId), // email
+			userId%2 == 0, // active
 		)
 		users = append(users, user)
-		for a := 0; a < narticlesPerUser; a++ {
+		for range narticlesPerUser {
 			articleId++
 			article := NewArticle(
-				articleId, // Id
-				base.Add(time.Duration(u)*time.Minute).Add(time.Duration(a)*time.Second), // Created
-				userId,         // UserId
-				"article text", // Text
+				articleId, // id
+				base.Add(time.Duration(articleId)*time.Minute), // created
+				userId,         // userId
+				"article text", // text
 			)
 			articles = append(articles, article)
-			for c := 0; c < ncommentsPerArticle; c++ {
+			for range ncommentsPerArticle {
 				commentId++
 				comment := NewComment(
-					commentId,
-					base.Add(time.Duration(u)*time.Minute).Add(time.Duration(a)*time.Second).Add(time.Duration(c)*time.Millisecond), // created,
-					articleId,
+					commentId, // id
+					base.Add(time.Duration(commentId)*time.Minute), // created
+					articleId,      // articleId
 					"comment text", // text,
 				)
 				comments = append(comments, comment)
@@ -214,16 +214,17 @@ func benchComplex(dbfile string, verbose bool, makeDb func(dbfile string) Db) {
 	MustBeEqual(nusers*narticlesPerUser, len(articles))
 	MustBeEqual(nusers*narticlesPerUser*ncommentsPerArticle, len(comments))
 	for i, user := range users {
-		MustBeEqual(i+1, user.Id)
-		MustBeEqual(2023, user.Created.Year())
-		MustBeEqual("user0", user.Email[0:5])
-		MustBeEqual(i%2 == 0, user.Active)
+		userId := i + 1
+		MustBeEqual(userId, user.Id)
+		MustBeEqual(base.Add(time.Duration(userId)*time.Minute), user.Created)
+		MustBeEqual(fmt.Sprintf("user%08d@example.com", userId), user.Email)
+		MustBeEqual(userId%2 == 0, user.Active)
 	}
 	for i, article := range articles {
-		MustBeEqual(i+1, article.Id)
-		MustBeEqual(2023, article.Created.Year())
-		MustBe(article.UserId >= 1)
-		MustBe(article.UserId <= 1+nusers)
+		articleId := i + 1
+		MustBeEqual(articleId, article.Id)
+		MustBeEqual(base.Add(time.Duration(articleId)*time.Minute), article.Created)
+		MustBe(1 <= article.UserId && article.UserId <= 1+nusers)
 		MustBeEqual("article text", article.Text)
 		if i > 0 {
 			last := articles[i-1]
@@ -231,8 +232,9 @@ func benchComplex(dbfile string, verbose bool, makeDb func(dbfile string) Db) {
 		}
 	}
 	for i, comment := range comments {
-		MustBeEqual(i+1, comment.Id)
-		MustBeEqual(2023, comment.Created.Year())
+		commentId := i + 1
+		MustBeEqual(commentId, comment.Id)
+		MustBeEqual(base.Add(time.Duration(commentId)*time.Minute), comment.Created)
 		MustBe(comment.ArticleId >= 1)
 		MustBe(comment.ArticleId <= 1+(nusers*narticlesPerUser))
 		MustBeEqual("comment text", comment.Text)
@@ -259,12 +261,12 @@ func benchMany(dbfile string, verbose bool, nusers int, makeDb func(dbfile strin
 	// insert users
 	var users []User
 	base := time.Date(2023, 10, 1, 10, 0, 0, 0, time.Local)
-	for i := 0; i < nusers; i++ {
+	for iuser := range nusers {
 		users = append(users, NewUser(
-			i+1,                                      // id,
-			base.Add(time.Duration(i)*time.Minute),   // created,
-			fmt.Sprintf("user%08d@example.com", i+1), // email,
-			true,                                     // active,
+			iuser+1, // id,
+			base.Add(time.Duration(iuser)*time.Minute),   // created,
+			fmt.Sprintf("user%08d@example.com", iuser+1), // email,
+			true, // active,
 		))
 	}
 	t0 := time.Now()
@@ -284,11 +286,11 @@ func benchMany(dbfile string, verbose bool, nusers int, makeDb func(dbfile strin
 		log.Printf("  query took %d ms", queryMillis)
 	}
 	// validate query result
-	for i, u := range users {
-		MustBeEqual(i+1, u.Id)
-		MustBeEqual(2023, u.Created.Year())
-		MustBeEqual("user0", u.Email[0:5])
-		MustBeEqual(true, u.Active)
+	for iuser, user := range users {
+		MustBeEqual(iuser+1, user.Id)
+		MustBeEqual(base.Add(time.Duration(iuser)*time.Minute), user.Created)
+		MustBeEqual(fmt.Sprintf("user%08d@example.com", iuser+1), user.Email)
+		MustBeEqual(true, user.Active)
 	}
 	// print results
 	bench := fmt.Sprintf("3_many/%04d", nusers)
@@ -354,7 +356,7 @@ func benchConcurrent(dbfile string, verbose bool, ngoroutines int, makeDb func(d
 	base := time.Date(2023, 10, 1, 10, 0, 0, 0, time.Local)
 	const nusers = 1_000_000
 	var users []User
-	for i := 0; i < nusers; i++ {
+	for i := range nusers {
 		users = append(users, NewUser(
 			i+1,                                    // Id
 			base.Add(time.Duration(i)*time.Second), // Created
@@ -369,11 +371,11 @@ func benchConcurrent(dbfile string, verbose bool, ngoroutines int, makeDb func(d
 	// query users in N goroutines
 	t0 = time.Now()
 	var wg sync.WaitGroup
-	for i := 0; i < ngoroutines; i++ {
+	for range ngoroutines {
 		wg.Add(1)
+		db := makeDb(dbfile)
 		go func() {
 			defer wg.Done()
-			db := makeDb(dbfile)
 			db.Exec(
 				"PRAGMA foreign_keys=1",
 				"PRAGMA busy_timeout=5000", // 5s busy timeout

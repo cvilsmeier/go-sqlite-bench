@@ -27,20 +27,23 @@ For benchmarks I used the following libraries:
 - sqinn, `github.com/cvilsmeier/sqinn-go`, a solution without CGO. It uses
     `github.com/cvilsmeier/sqinn` to access SQLite database files.
 
+- sqinn2, `github.com/cvilsmeier/sqinn-go` (v2), a solution without CGO. It uses
+    `github.com/cvilsmeier/sqinn` (v2) to access SQLite database files.
+
 - zombie, `github.com/zombiezen/go-sqlite`, a rewrite of the crawshaw driver, using the
     modernc libraries. This is not a `database/sql` driver.
 
 
 The test setup is as follows:
 
-- OS: Debian/GNU Linux amd64 version 12.8
+- OS: Debian/GNU Linux amd64 version 12.11
 - CPU: 11th Gen Intel(R) Core(TM) i7-1165G7 @ 2.80GHz, 8 cores
 - RAM: 32GB
 - Disk: 1TB NVME SSD
-- go version go1.23.4 linux/amd64
+- go version go1.24.5 linux/amd64
 
-The benchmark was run on 2024-12-11, with current library versions,
-see go.mod file. Each test was run once for warmup. The second run was then
+The benchmark was run on 2025-08-16, with current library versions,
+see go.mod file. Each test was run twice. The better result was then
 recorded. This is not very scientific.
 
 
@@ -58,7 +61,6 @@ lib versions, windows, macOS, different SQLite journal- and sync modes, etc.
 Unfortunately, supporting all this would take too much time for me.
 I read all proposals but have to, unfortunately, be very selective as to what
 to include in this project.
-
 
 
 Database Schema
@@ -110,14 +112,15 @@ Then query all users once.
 ![](results/simple.png)
 
     Simple;      insert;  query;
-    craw;          1304;    587;
-    eaton;         1119;    702;
-    glebarez;      5700;   1207;
-    mattn;         1682;   1187;
-    modernc;       5508;   1178;
-    ncruces;       3244;   1053;
-    sqinn;          966;    623;
-    zombie;        1831;    314;
+    craw;          1219;    490;
+    eaton;         1177;    603;
+    glebarez;      5330;    759;
+    mattn;         1582;   1051;
+    modernc;       5383;    765;
+    ncruces;       3087;    907;
+    sqinn;          875;    645;
+    sqinn2;         711;    230;
+    zombie;        1761;    261;
 
 
 ### Complex
@@ -130,14 +133,15 @@ Then query all users, articles and comments in one big JOIN statement.
 ![](results/complex.png)
 
     Complex;     insert;  query;
-    craw;           754;    593;
-    eaton;          727;    816;
-    glebarez;      3255;   1495;
-    mattn;          923;   1261;
-    modernc;       3219;   1497;
-    ncruces;       1948;   1284;
-    sqinn;          646;    729;
-    zombie;        1449;    501;
+    craw;           705;    608;
+    eaton;          700;    747;
+    glebarez;      2894;   1088;
+    mattn;          881;   1208;
+    modernc;       2926;   1113;
+    ncruces;       1838;   1211;
+    sqinn;          562;    725;
+    sqinn2;         476;    289;
+    zombie;        1276;    485;
 
 
 ### Many
@@ -149,14 +153,15 @@ This benchmark is used to simluate a read-heavy use case.
 ![](results/many.png)
 
     Many;        query/N=10; query/N=100; query/N=1000;
-    craw;                15;          66;          479;
-    eaton;               25;          75;          597;
-    glebarez;            24;         127;         1041;
-    mattn;               19;         115;          993;
-    modernc;             34;         126;         1048;
-    ncruces;             43;         124;         1057;
-    sqinn;               20;          66;          702;
-    zombie;              18;          37;          273;
+    craw;                14;          58;          508;
+    eaton;               24;          74;          589;
+    glebarez;            29;          93;          747;
+    mattn;               29;         120;         1009;
+    modernc;             29;          91;          717;
+    ncruces;             33;         113;          965;
+    sqinn;               19;          66;          628;
+    sqinn2;              40;          64;          342;
+    zombie;              16;          35;          245;
 
 
 ### Large
@@ -168,14 +173,15 @@ This benchmark is used to simluate reading of large (gigabytes) databases.
 ![](results/large.png)
 
     Large;       query/N=50000; query/N=100000; query/N=200000;
-    craw;                  208;            365;            714;
-    eaton;                 184;            325;            609;
-    glebarez;              244;            723;           1146;
-    mattn;                 154;            284;            501;
-    modernc;               232;            653;           1188;
-    ncruces;               212;            414;            790;
-    sqinn;                 588;           1114;           2103;
-    zombie;                180;            558;           1037;
+    craw;                  185;            323;            584;
+    eaton;                 144;            241;            424;
+    glebarez;              408;            676;           1104;
+    mattn;                 127;            263;            426;
+    modernc;               415;            677;           1085;
+    ncruces;               193;            303;            565;
+    sqinn;                 554;           1069;           1979;
+    sqinn2;                293;            539;           1132;
+    zombie;                335;            569;            934;
 
 
 ### Concurrent
@@ -187,24 +193,19 @@ This benchmark is used to simulate concurrent reads.
 ![](results/concurrent.png)
 
     Concurrent;  query/N=2; query/N=4; query/N=8;
-    craw;              592;       957;      1629;
-    eaton;             761;      1145;      1962;
-    glebarez;         2698;      7078;     18088;
-    mattn;            1298;      1725;      2915;
-    modernc;          2606;      7044;     17837;
-    ncruces;          1153;      1527;      2614;
-    sqinn;             634;      1370;      2333;
-    zombie;            399;       625;      1082;
+    craw;              579;       850;      1598;
+    eaton;             734;      1005;      1922;
+    glebarez;          877;      1166;      2145;
+    mattn;            1185;      1492;      2829;
+    modernc;           846;      1180;      2146;
+    ncruces;          1045;      1303;      2517;
+    sqinn;             619;      1124;      2332;
+    sqinn2;            426;       660;      1231;
+    zombie;            341;       577;      1027;
 
 
 Summary
 ------------------------------------------------------------------------------
 
 - We cannot declare a winner, it all depends on the use case.
-- Crawshaw and Zombiezen are pretty fast.
-- SQLite without CGO is possible.
-
-
-> [!NOTE]
-> This work is sponsored by Monibot - Website, Server and Application Monitoring.
-> Try out Monibot for free at [https://monibot.io](https://monibot.io?ref=go-sqlite-bench).
+- Zombiezen and Sqinn v2 (both without cgo) are pretty fast.
