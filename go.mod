@@ -4,7 +4,7 @@ go 1.24
 
 require (
 	crawshaw.io/sqlite v0.3.2
-	github.com/cvilsmeier/sqinn-go v1.2.0
+	github.com/bvinc/go-sqlite-lite v0.6.1
 	github.com/cvilsmeier/sqinn-go/v2 v2.0.0
 	github.com/eatonphil/gosqlite v0.10.0
 	github.com/glebarez/go-sqlite v1.22.0

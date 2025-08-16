@@ -8,30 +8,42 @@ Benchmarks for Golang SQLite Drivers
 
 For benchmarks I used the following libraries:
 
-- craw, [github.com/crawshaw/sqlite](https://github.com/crawshaw/sqlite), a CGO-based solution. This is not a `database/sql` driver.
+- bvinc, [github.com/bvinc/go-sqlite-lite](https://github.com/bvinc/go-sqlite-lite),
+  a CGO-based solution.
+  This is not a `database/sql` driver.
 
-- eaton, [github.com/eatonphil/gosqlite](https://github.com/eatonphil/gosqlite), a CGO-based solution. This is not a
-    `database/sql` driver. (addded by @c4rlo)
+- craw, [github.com/crawshaw/sqlite](https://github.com/crawshaw/sqlite),
+  a CGO-based solution.
+  This is not a `database/sql` driver.
 
-- glebarez, [github.com/glebarez/go-sqlite](https://github.com/glebarez/go-sqlite), a pure Go solution. This is a newer library,
-    based on the SQLite C code re-written in Go (added by @dcarbone).
+- eaton, [github.com/eatonphil/gosqlite](https://github.com/eatonphil/gosqlite),
+  a CGO-based solution.
+  This is not a `database/sql` driver. (addded by @c4rlo)
 
-- mattn, [github.com/mattn/go-sqlite3](https://github.com/mattn/go-sqlite3), a CGO-based solution. This library is
-    (still) the de-facto standard and widely used. 
+- glebarez, [github.com/glebarez/go-sqlite](https://github.com/glebarez/go-sqlite),
+  a pure Go solution. This is a newer library, based on the modernc libraries (added by @dcarbone).
+  This is a `database/sql` driver.
 
-- modernc, [modernc.org/sqlite](https://modernc.org/sqlite), a pure Go solution. This is a newer library,
-    based on the SQLite C code re-written in Go.
+- mattn, [github.com/mattn/go-sqlite3](https://github.com/mattn/go-sqlite3),
+  a CGO-based solution. This library is (still) the de-facto standard and widely used. 
+  This is a `database/sql` driver.
 
-- ncruces, [github.com/ncruces/go-sqlite3](https://github.com/ncruces/go-sqlite3), a pure Go solution based on WASM (?). 
+- modernc, [modernc.org/sqlite](https://modernc.org/sqlite),
+  a pure Go solution. This is a newer library, based on the SQLite C code transpiled to Go.
+  This is a `database/sql` driver.
 
-- sqinn, [github.com/cvilsmeier/sqinn-go](https://github.com/cvilsmeier/sqinn-go/tree/v1) (v1), a solution without CGO. It uses
-    [github.com/cvilsmeier/sqinn](https://github.com/cvilsmeier/sqinn/tree/v1) (v1) to access SQLite database files.
+- ncruces, [github.com/ncruces/go-sqlite3](https://github.com/ncruces/go-sqlite3),
+  a pure Go solution based on SQLite's WASM build and wazero. 
+  This is a `database/sql` driver.
 
-- sqinn2, [github.com/cvilsmeier/sqinn-go](https://github.com/cvilsmeier/sqinn-go) (v2), a solution without CGO. It uses
-    [github.com/cvilsmeier/sqinn](https://github.com/cvilsmeier/sqinn) (v2) to access SQLite database files.
+- sqinn, [github.com/cvilsmeier/sqinn-go](https://github.com/cvilsmeier/sqinn-go),
+  a solution without CGO. It uses [github.com/cvilsmeier/sqinn](https://github.com/cvilsmeier/sqinn)
+  to access SQLite database files.
+  This is not a `database/sql` driver.
 
-- zombie, [github.com/zombiezen/go-sqlite](https://github.com/zombiezen/go-sqlite), a rewrite of the crawshaw driver, using the
-    modernc libraries. This is not a `database/sql` driver.
+- zombie, [github.com/zombiezen/go-sqlite](https://github.com/zombiezen/go-sqlite),
+  a rewrite of the crawshaw driver, using the modernc libraries.
+  This is not a `database/sql` driver.
 
 
 The test setup is as follows:
@@ -112,15 +124,15 @@ Then query all users once.
 ![](results/simple.png)
 
     Simple;      insert;  query;
-    craw;          1219;    490;
-    eaton;         1177;    603;
-    glebarez;      5330;    759;
-    mattn;         1582;   1051;
-    modernc;       5383;    765;
-    ncruces;       3087;    907;
-    sqinn;          875;    645;
-    sqinn2;         711;    230;
-    zombie;        1761;    261;
+    bvinc;         1121;    571;
+    craw;          1249;    495;
+    eaton;         1101;    614;
+    glebarez;      5200;    763;
+    mattn;         1572;   1051;
+    modernc;       5102;    754;
+    ncruces;       3064;    919;
+    sqinn;          663;    237;
+    zombie;        1764;    255;
 
 
 ### Complex
@@ -133,15 +145,15 @@ Then query all users, articles and comments in one big JOIN statement.
 ![](results/complex.png)
 
     Complex;     insert;  query;
-    craw;           705;    608;
-    eaton;          700;    747;
-    glebarez;      2894;   1088;
-    mattn;          881;   1208;
-    modernc;       2926;   1113;
-    ncruces;       1838;   1211;
-    sqinn;          562;    725;
-    sqinn2;         476;    289;
-    zombie;        1276;    485;
+    bvinc;          709;    682;
+    craw;           732;    582;
+    eaton;          723;    771;
+    glebarez;      2899;   1088;
+    mattn;          886;   1187;
+    modernc;       2913;   1094;
+    ncruces;       1854;   1220;
+    sqinn;          457;    285;
+    zombie;        1323;    488;
 
 
 ### Many
@@ -153,15 +165,15 @@ This benchmark is used to simluate a read-heavy use case.
 ![](results/many.png)
 
     Many;        query/N=10; query/N=100; query/N=1000;
+    bvinc;               22;          69;          545;
     craw;                14;          58;          508;
-    eaton;               24;          74;          589;
-    glebarez;            29;          93;          747;
-    mattn;               29;         120;         1009;
-    modernc;             29;          91;          717;
-    ncruces;             33;         113;          965;
-    sqinn;               19;          66;          628;
-    sqinn2;              40;          64;          342;
-    zombie;              16;          35;          245;
+    eaton;               23;          73;          597;
+    glebarez;            30;          91;          730;
+    mattn;               29;         115;         1017;
+    modernc;             30;          92;          751;
+    ncruces;             39;         118;          984;
+    sqinn;               42;          59;          334;
+    zombie;              15;          33;          211;
 
 
 ### Large
@@ -173,15 +185,15 @@ This benchmark is used to simluate reading of large (gigabytes) databases.
 ![](results/large.png)
 
     Large;       query/N=50000; query/N=100000; query/N=200000;
-    craw;                  185;            323;            584;
-    eaton;                 144;            241;            424;
-    glebarez;              408;            676;           1104;
-    mattn;                 127;            263;            426;
-    modernc;               415;            677;           1085;
-    ncruces;               193;            303;            565;
-    sqinn;                 554;           1069;           1979;
-    sqinn2;                293;            539;           1132;
-    zombie;                335;            569;            934;
+    bvinc;                 171;            324;            521;
+    craw;                  190;            304;            582;
+    eaton;                 144;            240;            429;
+    glebarez;              425;            696;           1104;
+    mattn;                 133;            244;            469;
+    modernc;               394;            661;           1141;
+    ncruces;               181;            299;            562;
+    sqinn;                 298;            543;           1115;
+    zombie;                352;            560;            942;
 
 
 ### Concurrent
@@ -193,19 +205,19 @@ This benchmark is used to simulate concurrent reads.
 ![](results/concurrent.png)
 
     Concurrent;  query/N=2; query/N=4; query/N=8;
-    craw;              579;       850;      1598;
-    eaton;             734;      1005;      1922;
-    glebarez;          877;      1166;      2145;
-    mattn;            1185;      1492;      2829;
-    modernc;           846;      1180;      2146;
-    ncruces;          1045;      1303;      2517;
-    sqinn;             619;      1124;      2332;
-    sqinn2;            426;       660;      1231;
-    zombie;            341;       577;      1027;
+    bvinc;             762;       967;      1768;
+    craw;              576;       822;      1634;
+    eaton;             715;      1018;      1940;
+    glebarez;          938;      1163;      2146;
+    mattn;            1164;      1502;      2835;
+    modernc;           927;      1164;      2136;
+    ncruces;          1077;      1338;      2572;
+    sqinn;             425;       650;      1217;
+    zombie;            351;       568;      1061;
 
 
 Summary
 ------------------------------------------------------------------------------
 
 - We cannot declare a winner, it all depends on the use case.
-- Zombiezen and Sqinn v2 (both without cgo) are pretty fast.
+- Zombiezen and Sqinn (both without CGO) are pretty fast.

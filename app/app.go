@@ -10,6 +10,8 @@ import (
 	"time"
 )
 
+const verbose = false
+
 func Run(makeDb func(dbfile string) Db) {
 	log.SetOutput(os.Stdout)
 	log.SetFlags(0)
@@ -22,31 +24,30 @@ func Run(makeDb func(dbfile string) Db) {
 		log.Fatal("dbfile empty, cannot bench")
 	}
 	// verbose
-	const verbose = false
 	if verbose {
 		log.Printf("dbfile %q", dbfile)
 	}
 	// run benchmarks
 	if strings.Contains(benchmarks, "simple") {
-		benchSimple(dbfile, verbose, makeDb)
+		benchSimple(dbfile, makeDb)
 	}
 	if strings.Contains(benchmarks, "complex") {
-		benchComplex(dbfile, verbose, makeDb)
+		benchComplex(dbfile, makeDb)
 	}
 	if strings.Contains(benchmarks, "many") {
-		benchMany(dbfile, verbose, 10, makeDb)
-		benchMany(dbfile, verbose, 100, makeDb)
-		benchMany(dbfile, verbose, 1_000, makeDb)
+		benchMany(dbfile, 10, makeDb)
+		benchMany(dbfile, 100, makeDb)
+		benchMany(dbfile, 1_000, makeDb)
 	}
 	if strings.Contains(benchmarks, "large") {
-		benchLarge(dbfile, verbose, 50_000, makeDb)
-		benchLarge(dbfile, verbose, 100_000, makeDb)
-		benchLarge(dbfile, verbose, 200_000, makeDb)
+		benchLarge(dbfile, 50_000, makeDb)
+		benchLarge(dbfile, 100_000, makeDb)
+		benchLarge(dbfile, 200_000, makeDb)
 	}
 	if strings.Contains(benchmarks, "concurrent") {
-		benchConcurrent(dbfile, verbose, 2, makeDb)
-		benchConcurrent(dbfile, verbose, 4, makeDb)
-		benchConcurrent(dbfile, verbose, 8, makeDb)
+		benchConcurrent(dbfile, 2, makeDb)
+		benchConcurrent(dbfile, 4, makeDb)
+		benchConcurrent(dbfile, 8, makeDb)
 	}
 }
 
@@ -85,7 +86,7 @@ func initSchema(db Db) {
 
 // Insert 1 million user rows in one database transaction.
 // Then query all users once.
-func benchSimple(dbfile string, verbose bool, makeDb func(dbfile string) Db) {
+func benchSimple(dbfile string, makeDb func(dbfile string) Db) {
 	removeDbfiles(dbfile)
 	db := makeDb(dbfile)
 	defer db.Close()
@@ -94,7 +95,7 @@ func benchSimple(dbfile string, verbose bool, makeDb func(dbfile string) Db) {
 	var users []User
 	base := time.Date(2023, 10, 1, 10, 0, 0, 0, time.Local)
 	const nusers = 1_000_000
-	for i := 0; i < nusers; i++ {
+	for i := range nusers {
 		users = append(users, NewUser(
 			i+1,                                      // id,
 			base.Add(time.Duration(i)*time.Minute),   // created,
@@ -134,7 +135,7 @@ func benchSimple(dbfile string, verbose bool, makeDb func(dbfile string) Db) {
 // Then insert 20000 articles (100 articles for each user) in another transaction.
 // Then insert 400000 articles (20 comments for each article) in another transaction.
 // Then query all users, articles and comments in one big JOIN statement.
-func benchComplex(dbfile string, verbose bool, makeDb func(dbfile string) Db) {
+func benchComplex(dbfile string, makeDb func(dbfile string) Db) {
 	removeDbfiles(dbfile)
 	db := makeDb(dbfile)
 	defer db.Close()
@@ -253,7 +254,7 @@ func benchComplex(dbfile string, verbose bool, makeDb func(dbfile string) Db) {
 // Insert N users in one database transaction.
 // Then query all users 1000 times.
 // This benchmark is used to simluate a read-heavy use case.
-func benchMany(dbfile string, verbose bool, nusers int, makeDb func(dbfile string) Db) {
+func benchMany(dbfile string, nusers int, makeDb func(dbfile string) Db) {
 	removeDbfiles(dbfile)
 	db := makeDb(dbfile)
 	defer db.Close()
@@ -302,7 +303,7 @@ func benchMany(dbfile string, verbose bool, nusers int, makeDb func(dbfile strin
 // Insert 10000 users with N bytes of row content.
 // Then query all users.
 // This benchmark is used to simluate reading of large (gigabytes) databases.
-func benchLarge(dbfile string, verbose bool, nsize int, makeDb func(dbfile string) Db) {
+func benchLarge(dbfile string, nsize int, makeDb func(dbfile string) Db) {
 	removeDbfiles(dbfile)
 	db := makeDb(dbfile)
 	defer db.Close()
@@ -347,7 +348,7 @@ func benchLarge(dbfile string, verbose bool, nsize int, makeDb func(dbfile strin
 // Insert one million users.
 // Then have N goroutines query all users.
 // This benchmark is used to simulate concurrent reads.
-func benchConcurrent(dbfile string, verbose bool, ngoroutines int, makeDb func(dbfile string) Db) {
+func benchConcurrent(dbfile string, ngoroutines int, makeDb func(dbfile string) Db) {
 	removeDbfiles(dbfile)
 	db1 := makeDb(dbfile)
 	driverName := db1.DriverName()
