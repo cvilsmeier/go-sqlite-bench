@@ -8,29 +8,29 @@ Benchmarks for Golang SQLite Drivers
 
 For benchmarks I used the following libraries:
 
-- craw, `crawshaw.io/sqlite`, a CGO-based solution. This is not a `database/sql` driver.
+- craw, [github.com/crawshaw/sqlite](https://github.com/crawshaw/sqlite), a CGO-based solution. This is not a `database/sql` driver.
 
-- eaton, `github.com/eatonphil/gosqlite`, a CGO-based solution. This is not a
+- eaton, [github.com/eatonphil/gosqlite](https://github.com/eatonphil/gosqlite), a CGO-based solution. This is not a
     `database/sql` driver. (addded by @c4rlo)
 
-- glebarez, `github.com/glebarez/go-sqlite`, a pure Go solution. This is a newer library,
+- glebarez, [github.com/glebarez/go-sqlite](https://github.com/glebarez/go-sqlite), a pure Go solution. This is a newer library,
     based on the SQLite C code re-written in Go (added by @dcarbone).
 
-- mattn, `github.com/mattn/go-sqlite3`, a CGO-based solution. This library is
+- mattn, [github.com/mattn/go-sqlite3](https://github.com/mattn/go-sqlite3), a CGO-based solution. This library is
     (still) the de-facto standard and widely used. 
 
-- modernc, `modernc.org/sqlite`, a pure Go solution. This is a newer library,
+- modernc, [modernc.org/sqlite](https://modernc.org/sqlite), a pure Go solution. This is a newer library,
     based on the SQLite C code re-written in Go.
 
-- ncruces, `github.com/ncruces/go-sqlite3`, a pure Go solution based on WASM (?). 
+- ncruces, [github.com/ncruces/go-sqlite3](https://github.com/ncruces/go-sqlite3), a pure Go solution based on WASM (?). 
 
-- sqinn, `github.com/cvilsmeier/sqinn-go`, a solution without CGO. It uses
-    `github.com/cvilsmeier/sqinn` to access SQLite database files.
+- sqinn, [github.com/cvilsmeier/sqinn-go](https://github.com/cvilsmeier/sqinn-go/tree/v1) (v1), a solution without CGO. It uses
+    [github.com/cvilsmeier/sqinn](https://github.com/cvilsmeier/sqinn/tree/v1) (v1) to access SQLite database files.
 
-- sqinn2, `github.com/cvilsmeier/sqinn-go` (v2), a solution without CGO. It uses
-    `github.com/cvilsmeier/sqinn` (v2) to access SQLite database files.
+- sqinn2, [github.com/cvilsmeier/sqinn-go](https://github.com/cvilsmeier/sqinn-go) (v2), a solution without CGO. It uses
+    [github.com/cvilsmeier/sqinn](https://github.com/cvilsmeier/sqinn) (v2) to access SQLite database files.
 
-- zombie, `github.com/zombiezen/go-sqlite`, a rewrite of the crawshaw driver, using the
+- zombie, [github.com/zombiezen/go-sqlite](https://github.com/zombiezen/go-sqlite), a rewrite of the crawshaw driver, using the
     modernc libraries. This is not a `database/sql` driver.
 
 
