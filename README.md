@@ -240,5 +240,5 @@ This benchmark is used to simulate concurrent reads.
 Summary
 ------------------------------------------------------------------------------
 
-- We cannot declare a winner, it all depends on the use case.
-- Zombiezen and Sqinn (both without CGO) are pretty fast.
+- We cannot declare a clear winner, it all depends on the use case.
+- SQLite without CGO is possible nowadays.
