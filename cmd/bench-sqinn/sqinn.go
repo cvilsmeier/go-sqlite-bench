@@ -33,8 +33,15 @@ func (d *dbImpl) Exec(sqls ...string) {
 	}
 }
 
-func (d *dbImpl) InsertUsers(insertSql string, users []app.User) {
+func (d *dbImpl) Begin() {
 	d.sq.MustExecSql("BEGIN")
+}
+
+func (d *dbImpl) Commit() {
+	d.sq.MustExecSql("COMMIT")
+}
+
+func (d *dbImpl) InsertUsers(insertSql string, users []app.User) {
 	err := d.sq.Exec(insertSql, len(users), 4, func(iteration int, params []sqinn.Value) {
 		user := users[iteration]
 		params[0].Type = sqinn.ValInt32
@@ -49,11 +56,9 @@ func (d *dbImpl) InsertUsers(insertSql string, users []app.User) {
 	if err != nil {
 		panic(err)
 	}
-	d.sq.MustExecSql("COMMIT")
 }
 
 func (d *dbImpl) InsertArticles(insertSql string, articles []app.Article) {
-	d.sq.MustExecSql("BEGIN")
 	err := d.sq.Exec(insertSql, len(articles), 4, func(iteration int, params []sqinn.Value) {
 		article := articles[iteration]
 		params[0].Type = sqinn.ValInt32
@@ -68,11 +73,9 @@ func (d *dbImpl) InsertArticles(insertSql string, articles []app.Article) {
 	if err != nil {
 		panic(err)
 	}
-	d.sq.MustExecSql("COMMIT")
 }
 
 func (d *dbImpl) InsertComments(insertSql string, comments []app.Comment) {
-	d.sq.MustExecSql("BEGIN")
 	err := d.sq.Exec(insertSql, len(comments), 4, func(iteration int, params []sqinn.Value) {
 		comment := comments[iteration]
 		params[0].Type = sqinn.ValInt32
@@ -87,7 +90,6 @@ func (d *dbImpl) InsertComments(insertSql string, comments []app.Comment) {
 	if err != nil {
 		panic(err)
 	}
-	d.sq.MustExecSql("COMMIT")
 }
 
 func (d *dbImpl) FindUsers(querySql string) []app.User {
@@ -104,7 +106,7 @@ func (d *dbImpl) FindUsers(querySql string) []app.User {
 	return users
 }
 
-func (d *dbImpl) FindUsersArticlesComments(querySql string) ([]app.User, []app.Article, []app.Comment) {
+func (d *dbImpl) FindUsersArticlesComments(querySql string, params []any) ([]app.User, []app.Article, []app.Comment) {
 	users := make([]app.User, 0, 2*1024)
 	articles := make([]app.Article, 0, 2*1024)
 	comments := make([]app.Comment, 0, 2*1024)
@@ -116,7 +118,11 @@ func (d *dbImpl) FindUsersArticlesComments(querySql string) ([]app.User, []app.A
 	userIds := map[int]struct{}{}
 	articleIds := map[int]struct{}{}
 	commentIds := map[int]struct{}{}
-	err := d.sq.Query(querySql, nil, coltypes, func(row int, values []sqinn.Value) {
+	var sqinnParams []sqinn.Value
+	for _, p := range params {
+		sqinnParams = append(sqinnParams, sqinn.StringValue(p.(string)))
+	}
+	err := d.sq.Query(querySql, sqinnParams, coltypes, func(row int, values []sqinn.Value) {
 		user := readUser(values, 0)
 		article := readArticle(values, 4)
 		comment := readComment(values, 8)

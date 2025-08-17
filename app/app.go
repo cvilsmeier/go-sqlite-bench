@@ -16,7 +16,7 @@ func Run(makeDb func(dbfile string) Db) {
 	log.SetOutput(os.Stdout)
 	log.SetFlags(0)
 	log.Print("")
-	benchmarks := "simple,complex,many,large,concurrent"
+	benchmarks := "simple,real,complex,many,large,concurrent"
 	flag.StringVar(&benchmarks, "benchmarks", benchmarks, "specify benchmarks to run, comma separated")
 	flag.Parse()
 	dbfile := flag.Arg(0)
@@ -25,11 +25,15 @@ func Run(makeDb func(dbfile string) Db) {
 	}
 	// verbose
 	if verbose {
+		log.Printf("benchmarks %q", benchmarks)
 		log.Printf("dbfile %q", dbfile)
 	}
-	// run benchmarks
+	// run selected benchmarks
 	if strings.Contains(benchmarks, "simple") {
 		benchSimple(dbfile, makeDb)
+	}
+	if strings.Contains(benchmarks, "real") {
+		benchReal(dbfile, makeDb)
 	}
 	if strings.Contains(benchmarks, "complex") {
 		benchComplex(dbfile, makeDb)
@@ -104,7 +108,9 @@ func benchSimple(dbfile string, makeDb func(dbfile string) Db) {
 		))
 	}
 	t0 := time.Now()
-	db.InsertUsers("INSERT INTO users(id,created,email,active) VALUES(?,?,?,?)", users)
+	db.Begin()
+	db.InsertUsers(insertUserSql, users)
+	db.Commit()
 	insertMillis := millisSince(t0)
 	if verbose {
 		log.Printf("  insert took %d ms", insertMillis)
@@ -126,6 +132,143 @@ func benchSimple(dbfile string, makeDb func(dbfile string) Db) {
 	}
 	// print results
 	bench := "1_simple"
+	log.Printf("%s - insert - %-10s - %10d", bench, db.DriverName(), insertMillis)
+	log.Printf("%s - query  - %-10s - %10d", bench, db.DriverName(), queryMillis)
+	log.Printf("%s - dbsize - %-10s - %10d", bench, db.DriverName(), dbsize(dbfile))
+}
+
+// Insert 100 user with 20 articles per user and 20 comments per article.
+// Each user insert executes in a separate transaction.
+// Then query each user by email, and left-join articles and comments.
+// This benchmark is used to simulate a real-world use case.
+func benchReal(dbfile string, makeDb func(dbfile string) Db) {
+	removeDbfiles(dbfile)
+	db := makeDb(dbfile)
+	defer db.Close()
+	initSchema(db)
+	// insert users with articles and comments
+	base := time.Date(2025, 8, 17, 0, 0, 0, 0, time.Local)
+	created := base
+	const nusers = 100
+	const narticlesPerUser = 20
+	const ncommentsPerArticle = 20
+	var emails []string
+	for iuser := range nusers {
+		email := fmt.Sprintf("user%08d@example.com", iuser+1)
+		emails = append(emails, email)
+	}
+	MustBeEqual(nusers, len(emails))
+	t0 := time.Now()
+	var userId int
+	var articleId int
+	var commentId int
+	for _, email := range emails {
+		db.Begin()
+		userId++
+		user := NewUser(
+			userId,  // id,
+			created, // created,
+			email,   // email,
+			true,    // active,
+		)
+		db.InsertUsers(insertUserSql, []User{user})
+		created = created.Add(time.Second)
+		for range narticlesPerUser {
+			articleId++
+			article := NewArticle(
+				articleId, // id,
+				created,   // created,
+				userId,    // userId,
+				"text text text text text text text text text text text text", // text,
+			)
+			db.InsertArticles(insertArticleSql, []Article{article})
+			created = created.Add(time.Second)
+			for range ncommentsPerArticle {
+				commentId++
+				comment := NewComment(
+					commentId, // id,
+					created,   // created,
+					articleId, // articleId,
+					"text text text text text text text text text text text text", // text,
+				)
+				db.InsertComments(insertCommentSql, []Comment{comment})
+				created = created.Add(time.Second)
+			}
+		}
+		db.Commit()
+	}
+	insertMillis := millisSince(t0)
+	if verbose {
+		log.Printf("  insert took %d ms", insertMillis)
+	}
+	// query user by email, with articles and comments
+	querySql := "SELECT" +
+		" users.id, users.created, users.email, users.active," +
+		" articles.id, articles.created, articles.userId, articles.text," +
+		" comments.id, comments.created, comments.articleId, comments.text" +
+		" FROM users" +
+		" LEFT JOIN articles ON articles.userId = users.id" +
+		" LEFT JOIN comments ON comments.articleId = articles.id" +
+		" WHERE users.email = ?" +
+		" ORDER BY users.created, articles.created, comments.created"
+
+	t0 = time.Now()
+	users := make([]User, 0, nusers)
+	articles := make([]Article, 0, nusers*narticlesPerUser)
+	comments := make([]Comment, 0, nusers)
+	for _, email := range emails {
+		u, a, c := db.FindUsersArticlesComments(querySql, []any{email})
+		MustBeEqual(1, len(u))
+		MustBeEqual(narticlesPerUser, len(a))
+		MustBeEqual(narticlesPerUser*ncommentsPerArticle, len(c))
+		users = append(users, u...)
+		articles = append(articles, a...)
+		comments = append(comments, c...)
+	}
+	queryMillis := millisSince(t0)
+	if verbose {
+		log.Printf("  query took %d ms", queryMillis)
+	}
+	// validate query result
+	MustBeEqual(nusers, len(users))
+	MustBeEqual(nusers*narticlesPerUser, len(articles))
+	MustBeEqual(nusers*narticlesPerUser*ncommentsPerArticle, len(comments))
+	userId = 0
+	lastCreated := base.Add(-1 * time.Second)
+	for iuser, user := range users {
+		userId++
+		MustBeEqual(userId, user.Id)
+		MustBe(user.Created.After(lastCreated))
+		MustBeEqual(emails[iuser], user.Email)
+		MustBeEqual(true, user.Active)
+		lastCreated = user.Created
+	}
+	articleId = 0
+	lastCreated = base.Add(-1 * time.Second)
+	var lastUserId int
+	for _, article := range articles {
+		articleId++
+		MustBeEqual(articleId, article.Id)
+		MustBe(article.Created.After(lastCreated))
+		MustBe(article.UserId == lastUserId || article.UserId == lastUserId+1)
+		MustBeEqual("text text text text text text text text text text text text", article.Text)
+		lastCreated = article.Created
+		lastUserId = article.UserId
+	}
+	commentId = 0
+	lastCreated = base.Add(-1 * time.Second)
+	var lastArticleId int
+	for _, comment := range comments {
+		commentId++
+		MustBeEqual(commentId, comment.Id)
+		MustBe(comment.Created.After(lastCreated))
+		MustBe(comment.ArticleId == lastArticleId || comment.ArticleId == lastArticleId+1)
+		MustBeEqual("text text text text text text text text text text text text", comment.Text)
+		lastCreated = comment.Created
+		lastArticleId = comment.ArticleId
+	}
+	// print results
+	bench := "2_real"
 	log.Printf("%s - insert - %-10s - %10d", bench, db.DriverName(), insertMillis)
 	log.Printf("%s - query  - %-10s - %10d", bench, db.DriverName(), queryMillis)
 	log.Printf("%s - dbsize - %-10s - %10d", bench, db.DriverName(), dbsize(dbfile))
@@ -188,9 +331,15 @@ func benchComplex(dbfile string, makeDb func(dbfile string) Db) {
 	}
 	// insert users, articles, comments
 	t0 := time.Now()
+	db.Begin()
 	db.InsertUsers(insertUserSql, users)
+	db.Commit()
+	db.Begin()
 	db.InsertArticles(insertArticleSql, articles)
+	db.Commit()
+	db.Begin()
 	db.InsertComments(insertCommentSql, comments)
+	db.Commit()
 	insertMillis := millisSince(t0)
 	if verbose {
 		log.Printf("  insert took %d ms", insertMillis)
@@ -205,7 +354,7 @@ func benchComplex(dbfile string, makeDb func(dbfile string) Db) {
 		" LEFT JOIN comments ON comments.articleId = articles.id" +
 		" ORDER BY users.created,  articles.created, comments.created"
 	t0 = time.Now()
-	users, articles, comments = db.FindUsersArticlesComments(querySql)
+	users, articles, comments = db.FindUsersArticlesComments(querySql, nil)
 	queryMillis := millisSince(t0)
 	if verbose {
 		log.Printf("  query took %d ms", queryMillis)
@@ -245,7 +394,7 @@ func benchComplex(dbfile string, makeDb func(dbfile string) Db) {
 		}
 	}
 	// print results
-	bench := "2_complex"
+	bench := "3_complex"
 	log.Printf("%s - insert - %-10s - %10d", bench, db.DriverName(), insertMillis)
 	log.Printf("%s - query  - %-10s - %10d", bench, db.DriverName(), queryMillis)
 	log.Printf("%s - dbsize - %-10s - %10d", bench, db.DriverName(), dbsize(dbfile))
@@ -253,7 +402,7 @@ func benchComplex(dbfile string, makeDb func(dbfile string) Db) {
 
 // Insert N users in one database transaction.
 // Then query all users 1000 times.
-// This benchmark is used to simluate a read-heavy use case.
+// This benchmark is used to simulate a read-heavy use case.
 func benchMany(dbfile string, nusers int, makeDb func(dbfile string) Db) {
 	removeDbfiles(dbfile)
 	db := makeDb(dbfile)
@@ -271,7 +420,9 @@ func benchMany(dbfile string, nusers int, makeDb func(dbfile string) Db) {
 		))
 	}
 	t0 := time.Now()
+	db.Begin()
 	db.InsertUsers(insertUserSql, users)
+	db.Commit()
 	insertMillis := millisSince(t0)
 	if verbose {
 		log.Printf("  insert took %d ms", insertMillis)
@@ -294,15 +445,17 @@ func benchMany(dbfile string, nusers int, makeDb func(dbfile string) Db) {
 		MustBeEqual(true, user.Active)
 	}
 	// print results
-	bench := fmt.Sprintf("3_many/%04d", nusers)
-	log.Printf("%s - insert - %-10s - %10d", bench, db.DriverName(), insertMillis)
+	bench := fmt.Sprintf("4_many/%04d", nusers)
+	if verbose {
+		log.Printf("%s - insert - %-10s - %10d", bench, db.DriverName(), insertMillis)
+	}
 	log.Printf("%s - query  - %-10s - %10d", bench, db.DriverName(), queryMillis)
 	log.Printf("%s - dbsize - %-10s - %10d", bench, db.DriverName(), dbsize(dbfile))
 }
 
 // Insert 10000 users with N bytes of row content.
 // Then query all users.
-// This benchmark is used to simluate reading of large (gigabytes) databases.
+// This benchmark is used to simulate reading of large (gigabytes) databases.
 func benchLarge(dbfile string, nsize int, makeDb func(dbfile string) Db) {
 	removeDbfiles(dbfile)
 	db := makeDb(dbfile)
@@ -313,7 +466,7 @@ func benchLarge(dbfile string, nsize int, makeDb func(dbfile string) Db) {
 	base := time.Date(2023, 10, 1, 10, 0, 0, 0, time.Local)
 	const nusers = 10_000
 	var users []User
-	for i := 0; i < nusers; i++ {
+	for i := range nusers {
 		users = append(users, NewUser(
 			i+1,                                    // Id
 			base.Add(time.Duration(i)*time.Second), // Created
@@ -321,7 +474,9 @@ func benchLarge(dbfile string, nsize int, makeDb func(dbfile string) Db) {
 			true,                                   // Active
 		))
 	}
+	db.Begin()
 	db.InsertUsers(insertUserSql, users)
+	db.Commit()
 	insertMillis := millisSince(t0)
 	// query users
 	t0 = time.Now()
@@ -339,8 +494,10 @@ func benchLarge(dbfile string, nsize int, makeDb func(dbfile string) Db) {
 		MustBeEqual(true, u.Active)
 	}
 	// print results
-	bench := fmt.Sprintf("4_large/%06d", nsize)
-	log.Printf("%s - insert - %-10s - %10d", bench, db.DriverName(), insertMillis)
+	bench := fmt.Sprintf("5_large/%06d", nsize)
+	if verbose {
+		log.Printf("%s - insert - %-10s - %10d", bench, db.DriverName(), insertMillis)
+	}
 	log.Printf("%s - query  - %-10s - %10d", bench, db.DriverName(), queryMillis)
 	log.Printf("%s - dbsize - %-10s - %10d", bench, db.DriverName(), dbsize(dbfile))
 }
@@ -366,7 +523,9 @@ func benchConcurrent(dbfile string, ngoroutines int, makeDb func(dbfile string) 
 		))
 	}
 	t0 := time.Now()
+	db1.Begin()
 	db1.InsertUsers(insertUserSql, users)
+	db1.Commit()
 	db1.Close()
 	insertMillis := millisSince(t0)
 	// query users in N goroutines
@@ -400,8 +559,10 @@ func benchConcurrent(dbfile string, ngoroutines int, makeDb func(dbfile string) 
 		log.Printf("  query took %d ms", queryMillis)
 	}
 	// print results
-	bench := fmt.Sprintf("5_concurrent/%d", ngoroutines)
-	log.Printf("%s - insert - %-10s - %10d", bench, driverName, insertMillis)
+	bench := fmt.Sprintf("6_concurrent/%d", ngoroutines)
+	if verbose {
+		log.Printf("%s - insert - %-10s - %10d", bench, driverName, insertMillis)
+	}
 	log.Printf("%s - query  - %-10s - %10d", bench, driverName, queryMillis)
 	log.Printf("%s - dbsize - %-10s - %10d", bench, driverName, dbsize(dbfile))
 }

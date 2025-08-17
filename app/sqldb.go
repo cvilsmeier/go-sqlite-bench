@@ -8,12 +8,13 @@ import (
 type SqlDb struct {
 	driverName string
 	db         *sql.DB
+	tx         *sql.Tx // or nil if no tx active right now
 }
 
 var _ Db = (*SqlDb)(nil)
 
 func NewSqlDb(driverName string, db *sql.DB) *SqlDb {
-	return &SqlDb{driverName, db}
+	return &SqlDb{driverName, db, nil}
 }
 
 func (d *SqlDb) DriverName() string {
@@ -27,10 +28,20 @@ func (d *SqlDb) Exec(sqls ...string) {
 	}
 }
 
-func (d *SqlDb) InsertUsers(insertSql string, users []User) {
+func (d *SqlDb) Begin() {
 	tx, err := d.db.Begin()
 	MustBeNil(err)
-	stmt, err := tx.Prepare(insertSql)
+	d.tx = tx
+}
+
+func (d *SqlDb) Commit() {
+	err := d.tx.Commit()
+	MustBeNil(err)
+	d.tx = nil
+}
+
+func (d *SqlDb) InsertUsers(insertSql string, users []User) {
+	stmt, err := d.tx.Prepare(insertSql)
 	MustBeNil(err)
 	for _, u := range users {
 		_, err = stmt.Exec(u.Id, BindTime(u.Created), u.Email, u.Active)
@@ -38,14 +49,10 @@ func (d *SqlDb) InsertUsers(insertSql string, users []User) {
 	}
 	err = stmt.Close()
 	MustBeNil(err)
-	err = tx.Commit()
-	MustBeNil(err)
 }
 
 func (d *SqlDb) InsertArticles(insertSql string, articles []Article) {
-	tx, err := d.db.Begin()
-	MustBeNil(err)
-	stmt, err := tx.Prepare(insertSql)
+	stmt, err := d.tx.Prepare(insertSql)
 	MustBeNil(err)
 	for _, u := range articles {
 		_, err = stmt.Exec(u.Id, BindTime(u.Created), u.UserId, u.Text)
@@ -53,22 +60,16 @@ func (d *SqlDb) InsertArticles(insertSql string, articles []Article) {
 	}
 	err = stmt.Close()
 	MustBeNil(err)
-	err = tx.Commit()
-	MustBeNil(err)
 }
 
 func (d *SqlDb) InsertComments(insertSql string, comments []Comment) {
-	tx, err := d.db.Begin()
-	MustBeNil(err)
-	stmt, err := tx.Prepare(insertSql)
+	stmt, err := d.tx.Prepare(insertSql)
 	MustBeNil(err)
 	for _, u := range comments {
 		_, err = stmt.Exec(u.Id, BindTime(u.Created), u.ArticleId, u.Text)
 		MustBeNil(err)
 	}
 	err = stmt.Close()
-	MustBeNil(err)
-	err = tx.Commit()
 	MustBeNil(err)
 }
 
@@ -104,8 +105,8 @@ func (d *SqlDb) FindArticles(querySql string) []Article {
 	return articles
 }
 
-func (d *SqlDb) FindUsersArticlesComments(querySql string) ([]User, []Article, []Comment) {
-	rows, err := d.db.Query(querySql)
+func (d *SqlDb) FindUsersArticlesComments(querySql string, params []any) ([]User, []Article, []Comment) {
+	rows, err := d.db.Query(querySql, params...)
 	MustBeNil(err)
 	var userId sql.NullInt32
 	var userCreated sql.NullInt64

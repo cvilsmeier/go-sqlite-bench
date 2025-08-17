@@ -6,11 +6,13 @@ import "time"
 type Db interface {
 	DriverName() string
 	Exec(sqls ...string)
+	Begin()
+	Commit()
 	InsertUsers(insertSql string, users []User)
 	InsertArticles(insertSql string, articles []Article)
 	InsertComments(insertSql string, comments []Comment)
 	FindUsers(querySql string) []User
-	FindUsersArticlesComments(querySql string) ([]User, []Article, []Comment)
+	FindUsersArticlesComments(querySql string, params []any) ([]User, []Article, []Comment)
 	Close()
 }
 

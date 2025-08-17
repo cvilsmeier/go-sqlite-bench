@@ -1,54 +1,70 @@
 Simple;      insert;  query;
-bvinc;         1121;    571;
-craw;          1249;    495;
-eaton;         1101;    614;
-glebarez;      5200;    763;
-mattn;         1572;   1051;
-modernc;       5102;    754;
-ncruces;       3064;    919;
-sqinn;          663;    237;
-zombie;        1764;    255;
+bvinc;         1140;    574;
+craw;          1173;    501;
+eaton;         1107;    631;
+glebarez;      5131;    761;
+mattn;         1531;   1018;
+modernc;       5288;    760;
+ncruces;       3046;    910;
+sqinn;          717;    247;
+zombie;        1791;    264;
+
+
+Real;      insert;  query;
+bvinc;       1166;     75;
+craw;        1212;     58;
+eaton;       1107;     80;
+glebarez;    1673;    134;
+mattn;       1416;    120;
+modernc;     1641;    130;
+ncruces;     1364;    127;
+sqinn;       1236;     48;
+zombie;      1762;     59;
+
 
 Complex;     insert;  query;
-bvinc;          709;    682;
-craw;           732;    582;
-eaton;          723;    771;
-glebarez;      2899;   1088;
-mattn;          886;   1187;
-modernc;       2913;   1094;
-ncruces;       1854;   1220;
-sqinn;          457;    285;
-zombie;        1323;    488;
+bvinc;          701;    692;
+craw;           699;    595;
+eaton;          686;    756;
+glebarez;      2918;   1093;
+mattn;          843;   1187;
+modernc;       2909;   1100;
+ncruces;       1834;   1211;
+sqinn;          457;    292;
+zombie;        1286;    481;
+
 
 Many;        query/N=10; query/N=100; query/N=1000;
-bvinc;               22;          69;          545;
-craw;                14;          58;          508;
-eaton;               23;          73;          597;
-glebarez;            30;          91;          730;
-mattn;               29;         115;         1017;
-modernc;             30;          92;          751;
-ncruces;             39;         118;          984;
-sqinn;               42;          59;          334;
-zombie;              15;          33;          211;
+bvinc;               15;          66;          532;
+craw;                13;          59;          499;
+eaton;               24;          77;          584;
+glebarez;            29;          90;          723;
+mattn;               30;         111;         1000;
+modernc;             30;          91;          736;
+ncruces;             40;         116;          965;
+sqinn;               40;          58;          339;
+zombie;              15;          34;          218;
+
 
 Large;       query/N=50000; query/N=100000; query/N=200000;
-bvinc;                 171;            324;            521;
-craw;                  190;            304;            582;
-eaton;                 144;            240;            429;
-glebarez;              425;            696;           1104;
-mattn;                 133;            244;            469;
-modernc;               394;            661;           1141;
-ncruces;               181;            299;            562;
-sqinn;                 298;            543;           1115;
-zombie;                352;            560;            942;
+bvinc;                 149;            303;            560;
+craw;                  167;            296;            574;
+eaton;                 138;            227;            450;
+glebarez;              404;            664;           1160;
+mattn;                 131;            238;            449;
+modernc;               387;            674;           1116;
+ncruces;               171;            341;            648;
+sqinn;                 292;            507;           1074;
+zombie;                335;            591;           1000;
+
 
 Concurrent;  query/N=2; query/N=4; query/N=8;
-bvinc;             762;       967;      1768;
-craw;              576;       822;      1634;
-eaton;             715;      1018;      1940;
-glebarez;          938;      1163;      2146;
-mattn;            1164;      1502;      2835;
-modernc;           927;      1164;      2136;
-ncruces;          1077;      1338;      2572;
-sqinn;             425;       650;      1217;
-zombie;            351;       568;      1061;
+bvinc;             686;       915;      1729;
+craw;              586;       869;      1633;
+eaton;             714;      1015;      1924;
+glebarez;          856;      1182;      2177;
+mattn;            1149;      1478;      2830;
+modernc;           870;      1170;      2139;
+ncruces;           982;      1300;      2516;
+sqinn;             481;       668;      1224;
+zombie;            323;       557;      1050;

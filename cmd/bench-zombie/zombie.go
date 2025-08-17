@@ -33,8 +33,15 @@ func (d *dbImpl) Exec(sqls ...string) {
 	}
 }
 
-func (d *dbImpl) InsertUsers(insertSql string, users []app.User) {
+func (d *dbImpl) Begin() {
 	d.exec("BEGIN")
+}
+
+func (d *dbImpl) Commit() {
+	d.exec("COMMIT")
+}
+
+func (d *dbImpl) InsertUsers(insertSql string, users []app.User) {
 	stmt := d.conn.Prep(insertSql)
 	for _, u := range users {
 		stmt.BindInt64(1, int64(u.Id))
@@ -48,11 +55,9 @@ func (d *dbImpl) InsertUsers(insertSql string, users []app.User) {
 	}
 	err := stmt.Finalize()
 	app.MustBeNil(err)
-	d.exec("COMMIT")
 }
 
 func (d *dbImpl) InsertArticles(insertSql string, articles []app.Article) {
-	d.exec("BEGIN")
 	stmt := d.conn.Prep(insertSql)
 	for _, u := range articles {
 		stmt.BindInt64(1, int64(u.Id))
@@ -66,11 +71,9 @@ func (d *dbImpl) InsertArticles(insertSql string, articles []app.Article) {
 	}
 	err := stmt.Finalize()
 	app.MustBeNil(err)
-	d.exec("COMMIT")
 }
 
 func (d *dbImpl) InsertComments(insertSql string, comments []app.Comment) {
-	d.exec("BEGIN")
 	stmt := d.conn.Prep(insertSql)
 	for _, u := range comments {
 		stmt.BindInt64(1, int64(u.Id))
@@ -84,7 +87,6 @@ func (d *dbImpl) InsertComments(insertSql string, comments []app.Comment) {
 	}
 	err := stmt.Finalize()
 	app.MustBeNil(err)
-	d.exec("COMMIT")
 }
 
 func (d *dbImpl) FindUsers(querySql string) []app.User {
@@ -127,9 +129,12 @@ func (d *dbImpl) FindArticles(querySql string) []app.Article {
 	return articles
 }
 
-func (d *dbImpl) FindUsersArticlesComments(querySql string) ([]app.User, []app.Article, []app.Comment) {
+func (d *dbImpl) FindUsersArticlesComments(querySql string, params []any) ([]app.User, []app.Article, []app.Comment) {
 	stmt, err := d.conn.Prepare(querySql)
 	app.MustBeNil(err)
+	for ip, p := range params {
+		stmt.BindText(ip+1, p.(string))
+	}
 	more, err := stmt.Step()
 	app.MustBeNil(err)
 	// collections

@@ -18,9 +18,9 @@ func MustBe(c bool) {
 	}
 }
 
-func MustBeEqual(a, b any) {
-	if a != b {
-		panic(fmt.Sprintf("must be equal but was different: %#v != %#v", a, b))
+func MustBeEqual(want, have any) {
+	if want != have {
+		panic(fmt.Sprintf("must be equal but was different:\nwant %#v\nhave %#v", want, have))
 	}
 }
 

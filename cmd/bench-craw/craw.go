@@ -44,10 +44,21 @@ func (d *dbImpl) Exec(sqls ...string) {
 	}
 }
 
-func (d *dbImpl) InsertUsers(insertSql string, users []app.User) {
+func (d *dbImpl) Begin() {
 	conn := d.pool.Get(context.TODO())
 	defer d.pool.Put(conn)
 	d.exec(conn, "BEGIN")
+}
+
+func (d *dbImpl) Commit() {
+	conn := d.pool.Get(context.TODO())
+	defer d.pool.Put(conn)
+	d.exec(conn, "COMMIT")
+}
+
+func (d *dbImpl) InsertUsers(insertSql string, users []app.User) {
+	conn := d.pool.Get(context.TODO())
+	defer d.pool.Put(conn)
 	stmt := conn.Prep(insertSql)
 	for _, u := range users {
 		//	Id        int
@@ -65,13 +76,11 @@ func (d *dbImpl) InsertUsers(insertSql string, users []app.User) {
 	}
 	err := stmt.Finalize()
 	app.MustBeNil(err)
-	d.exec(conn, "COMMIT")
 }
 
 func (d *dbImpl) InsertArticles(insertSql string, articles []app.Article) {
 	conn := d.pool.Get(context.TODO())
 	defer d.pool.Put(conn)
-	d.exec(conn, "BEGIN")
 	stmt := conn.Prep(insertSql)
 	for _, u := range articles {
 		stmt.BindInt64(1, int64(u.Id))
@@ -85,13 +94,11 @@ func (d *dbImpl) InsertArticles(insertSql string, articles []app.Article) {
 	}
 	err := stmt.Finalize()
 	app.MustBeNil(err)
-	d.exec(conn, "COMMIT")
 }
 
 func (d *dbImpl) InsertComments(insertSql string, comments []app.Comment) {
 	conn := d.pool.Get(context.TODO())
 	defer d.pool.Put(conn)
-	d.exec(conn, "BEGIN")
 	stmt := conn.Prep(insertSql)
 	for _, u := range comments {
 		stmt.BindInt64(1, int64(u.Id))
@@ -105,7 +112,6 @@ func (d *dbImpl) InsertComments(insertSql string, comments []app.Comment) {
 	}
 	err := stmt.Finalize()
 	app.MustBeNil(err)
-	d.exec(conn, "COMMIT")
 }
 
 func (d *dbImpl) FindUsers(querySql string) []app.User {
@@ -152,11 +158,14 @@ func (d *dbImpl) FindArticles(querySql string) []app.Article {
 	return articles
 }
 
-func (d *dbImpl) FindUsersArticlesComments(querySql string) ([]app.User, []app.Article, []app.Comment) {
+func (d *dbImpl) FindUsersArticlesComments(querySql string, params []any) ([]app.User, []app.Article, []app.Comment) {
 	conn := d.pool.Get(context.TODO())
 	defer d.pool.Put(conn)
 	stmt, err := conn.Prepare(querySql)
 	app.MustBeNil(err)
+	for iparam, param := range params {
+		stmt.BindText(iparam+1, param.(string)) // right now it supports only string params
+	}
 	more, err := stmt.Step()
 	app.MustBeNil(err)
 	// collections

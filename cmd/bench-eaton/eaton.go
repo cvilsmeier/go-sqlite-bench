@@ -48,37 +48,39 @@ func (d *dbImpl) prepare(sql string) *gosqlite.Stmt {
 	return stmt
 }
 
-func (d *dbImpl) InsertUsers(insertSql string, users []app.User) {
+func (d *dbImpl) Begin() {
 	app.MustBeNil(d.conn.Begin())
+}
+
+func (d *dbImpl) Commit() {
+	app.MustBeNil(d.conn.Commit())
+}
+
+func (d *dbImpl) InsertUsers(insertSql string, users []app.User) {
 	stmt := d.prepare(insertSql)
 	for _, u := range users {
 		err := stmt.Exec(int64(u.Id), app.BindTime(u.Created), u.Email, u.Active)
 		app.MustBeNil(err)
 	}
 	app.MustBeNil(stmt.Close())
-	app.MustBeNil(d.conn.Commit())
 }
 
 func (d *dbImpl) InsertArticles(insertSql string, articles []app.Article) {
-	app.MustBeNil(d.conn.Begin())
 	stmt := d.prepare(insertSql)
 	for _, u := range articles {
 		err := stmt.Exec(int64(u.Id), app.BindTime(u.Created), int64(u.UserId), u.Text)
 		app.MustBeNil(err)
 	}
 	app.MustBeNil(stmt.Close())
-	app.MustBeNil(d.conn.Commit())
 }
 
 func (d *dbImpl) InsertComments(insertSql string, comments []app.Comment) {
-	app.MustBeNil(d.conn.Begin())
 	stmt := d.prepare(insertSql)
 	for _, u := range comments {
 		err := stmt.Exec(int64(u.Id), app.BindTime(u.Created), int64(u.ArticleId), u.Text)
 		app.MustBeNil(err)
 	}
 	app.MustBeNil(stmt.Close())
-	app.MustBeNil(d.conn.Commit())
 }
 
 func (d *dbImpl) FindUsers(querySql string) []app.User {
@@ -125,8 +127,9 @@ func (d *dbImpl) FindArticles(querySql string) []app.Article {
 	return articles
 }
 
-func (d *dbImpl) FindUsersArticlesComments(querySql string) ([]app.User, []app.Article, []app.Comment) {
+func (d *dbImpl) FindUsersArticlesComments(querySql string, params []any) ([]app.User, []app.Article, []app.Comment) {
 	stmt := d.prepare(querySql)
+	stmt.Bind(params...)
 	// collections
 	var users []app.User
 	userIndexer := make(map[int]int)
