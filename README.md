@@ -5,61 +5,19 @@ Benchmarks for Golang SQLite Drivers
 > This work is sponsored by Monibot - Website, Server and Application Monitoring.
 > Try out Monibot for free at [https://monibot.io](https://monibot.io?ref=go-sqlite-bench).
 
-
 For benchmarks I used the following libraries:
-
-- bvinc, [github.com/bvinc/go-sqlite-lite](https://github.com/bvinc/go-sqlite-lite),
-  a CGO-based solution.
-  This is not a `database/sql` driver.
-
-- craw, [github.com/crawshaw/sqlite](https://github.com/crawshaw/sqlite),
-  a CGO-based solution.
-  This is not a `database/sql` driver.
-
-- eaton, [github.com/eatonphil/gosqlite](https://github.com/eatonphil/gosqlite),
-  a CGO-based solution.
-  This is not a `database/sql` driver. (addded by @c4rlo)
-
-- glebarez, [github.com/glebarez/go-sqlite](https://github.com/glebarez/go-sqlite),
-  a pure Go solution. This is a newer library, based on the modernc libraries (added by @dcarbone).
-  This is a `database/sql` driver.
-
-- mattn, [github.com/mattn/go-sqlite3](https://github.com/mattn/go-sqlite3),
-  a CGO-based solution. This library is (still) the de-facto standard and widely used. 
-  This is a `database/sql` driver.
-
-- modernc, [modernc.org/sqlite](https://modernc.org/sqlite),
-  a pure Go solution. This is a newer library, based on the SQLite C code transpiled to Go.
-  This is a `database/sql` driver.
-
-- ncruces, [github.com/ncruces/go-sqlite3](https://github.com/ncruces/go-sqlite3),
-  a pure Go solution based on SQLite's WASM build and wazero. 
-  This is a `database/sql` driver.
-
-- sqinn, [github.com/cvilsmeier/sqinn-go](https://github.com/cvilsmeier/sqinn-go),
-  a solution without CGO. It uses [github.com/cvilsmeier/sqinn](https://github.com/cvilsmeier/sqinn)
-  to access SQLite database files.
-  This is not a `database/sql` driver.
-
-- zombie, [github.com/zombiezen/go-sqlite](https://github.com/zombiezen/go-sqlite),
-  a rewrite of the crawshaw driver, using the modernc libraries.
-  This is not a `database/sql` driver.
-
-
-For better overview, here is a table:
 
 | Name     | Repository                                                                 | db/sql | cgo  | Remarks |
 | :---     | :---                                                                       | :---   | :--- | :---    |
 | bvinc    | [github.com/bvinc/go-sqlite-lite](https://github.com/bvinc/go-sqlite-lite) | -      | yes  | |
 | craw     | [github.com/crawshaw/sqlite](https://github.com/crawshaw/sqlite)           | -      | yes  | |
 | eaton    | [github.com/eatonphil/gosqlite](https://github.com/eatonphil/gosqlite)     | -      | yes  | (addded by @c4rlo) |
-| glebarez | [github.com/glebarez/go-sqlite](https://github.com/glebarez/go-sqlite)     | yes    | -    | This is a newer library, based on the modernc libraries (added by @dcarbone) |
+| glebarez | [github.com/glebarez/go-sqlite](https://github.com/glebarez/go-sqlite)     | yes    | -    | Based on the modernc libraries (added by @dcarbone) |
 | mattn    | [github.com/mattn/go-sqlite3](https://github.com/mattn/go-sqlite3)         | yes    | yes  | This library is (still) the de-facto standard and widely used. |
-| modernc  | [modernc.org/sqlite](https://modernc.org/sqlite)                           | yes    | -    | This is a newer library, based on the SQLite C code transpiled to Go. |
-| ncruces  | [github.com/ncruces/go-sqlite3](https://github.com/ncruces/go-sqlite3)     | yes    | -    | This library is based on SQLite's WASM build and wazero. |
-| sqinn    | [github.com/cvilsmeier/sqinn-go](https://github.com/cvilsmeier/sqinn-go)   | -      | -    | It uses [github.com/cvilsmeier/sqinn](https://github.com/cvilsmeier/sqinn) to access SQLite database files.|
-| zombie   | [github.com/zombiezen/go-sqlite](https://github.com/zombiezen/go-sqlite)   | -      | -    | A rewrite of the crawshaw driver, using the modernc libraries. |
-
+| modernc  | [modernc.org/sqlite](https://modernc.org/sqlite)                           | yes    | -    | A pure Go solution, based on the SQLite C code transpiled to Go. |
+| ncruces  | [github.com/ncruces/go-sqlite3](https://github.com/ncruces/go-sqlite3)     | yes    | -    | A pure Go solution based on SQLite's WASM build and wazero. |
+| sqinn    | [github.com/cvilsmeier/sqinn-go](https://github.com/cvilsmeier/sqinn-go)   | -      | -    | A solution without CGO. It uses [github.com/cvilsmeier/sqinn](https://github.com/cvilsmeier/sqinn) to access SQLite database files. |
+| zombie   | [github.com/zombiezen/go-sqlite](https://github.com/zombiezen/go-sqlite)   | -      | -    | A pure-Go rewrite of the crawshaw driver, using the modernc libraries. |
 
 The test setup is as follows:
 
