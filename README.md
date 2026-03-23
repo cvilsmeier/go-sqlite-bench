@@ -9,13 +9,13 @@ For benchmarks I used the following libraries:
 
 | Name     | Repository                                                                 | db/sql | cgo   | published  | Remarks |
 | :---     | :---                                                                       | :---   | :---  | :---       | :---    |
-| bvinc    | [github.com/bvinc/go-sqlite-lite](https://github.com/bvinc/go-sqlite-lite) | no     | yes   | 2019-05-02 |         |
-| craw     | [github.com/crawshaw/sqlite](https://github.com/crawshaw/sqlite)           | no     | yes   | 2020-06-07 |         |
-| eaton    | [github.com/eatonphil/gosqlite](https://github.com/eatonphil/gosqlite)     | no     | yes   | 2024-08-11 | (addded by @c4rlo) |
+| bvinc    | [github.com/bvinc/go-sqlite-lite](https://github.com/bvinc/go-sqlite-lite) | no     | yes   | 2019-05-02 | A CGO wrapper library |
+| craw     | [github.com/crawshaw/sqlite](https://github.com/crawshaw/sqlite)           | no     | yes   | 2020-06-07 | A CGO wrapper library with statement caching |
+| eaton    | [github.com/eatonphil/gosqlite](https://github.com/eatonphil/gosqlite)     | no     | yes   | 2024-08-11 | A CGO wrapper library (addded by @c4rlo) |
 | glebarez | [github.com/glebarez/go-sqlite](https://github.com/glebarez/go-sqlite)     | yes    | no    | 2023-12-26 | Based on the modernc libraries (added by @dcarbone) |
-| mattn    | [github.com/mattn/go-sqlite3](https://github.com/mattn/go-sqlite3)         | yes    | yes   | 2026-03-16 | This library is (still) the de-facto standard and widely used. |
-| modernc  | [modernc.org/sqlite](https://modernc.org/sqlite)                           | yes    | no    | 2026-03-17 | A pure Go solution, based on the SQLite C code transpiled to Go. |
-| ncruces  | [github.com/ncruces/go-sqlite3](https://github.com/ncruces/go-sqlite3)     | yes    | no    | 2026-03-21 | A pure Go solution based on SQLite's WASM build and wazero. |
+| mattn    | [github.com/mattn/go-sqlite3](https://github.com/mattn/go-sqlite3)         | yes    | yes   | 2026-03-16 | This CGO library is (still) the de-facto standard and widely used |
+| modernc  | [modernc.org/sqlite](https://modernc.org/sqlite)                           | yes    | no    | 2026-03-17 | A pure Go solution, based on the SQLite C code transpiled to Go |
+| ncruces  | [github.com/ncruces/go-sqlite3](https://github.com/ncruces/go-sqlite3)     | yes    | no    | 2026-03-21 | A pure Go solution based on a WASM build of SQLite |
 | sqinn    | [github.com/cvilsmeier/sqinn-go](https://github.com/cvilsmeier/sqinn-go)   | no     | no    | 2026-03-18 | A solution without CGO. It uses [github.com/cvilsmeier/sqinn](https://github.com/cvilsmeier/sqinn) to access SQLite database files. |
 | zombie   | [github.com/zombiezen/go-sqlite](https://github.com/zombiezen/go-sqlite)   | no     | no    | 2025-05-23 | A pure-Go rewrite of the crawshaw driver, using the modernc libraries. |
 
