@@ -7,27 +7,27 @@ Benchmarks for Golang SQLite Drivers
 
 For benchmarks I used the following libraries:
 
-| Name     | Repository                                                                 | db/sql | cgo  | Remarks |
-| :---     | :---                                                                       | :---   | :--- | :---    |
-| bvinc    | [github.com/bvinc/go-sqlite-lite](https://github.com/bvinc/go-sqlite-lite) | -      | yes  | |
-| craw     | [github.com/crawshaw/sqlite](https://github.com/crawshaw/sqlite)           | -      | yes  | |
-| eaton    | [github.com/eatonphil/gosqlite](https://github.com/eatonphil/gosqlite)     | -      | yes  | (addded by @c4rlo) |
-| glebarez | [github.com/glebarez/go-sqlite](https://github.com/glebarez/go-sqlite)     | yes    | -    | Based on the modernc libraries (added by @dcarbone) |
-| mattn    | [github.com/mattn/go-sqlite3](https://github.com/mattn/go-sqlite3)         | yes    | yes  | This library is (still) the de-facto standard and widely used. |
-| modernc  | [modernc.org/sqlite](https://modernc.org/sqlite)                           | yes    | -    | A pure Go solution, based on the SQLite C code transpiled to Go. |
-| ncruces  | [github.com/ncruces/go-sqlite3](https://github.com/ncruces/go-sqlite3)     | yes    | -    | A pure Go solution based on SQLite's WASM build and wazero. |
-| sqinn    | [github.com/cvilsmeier/sqinn-go](https://github.com/cvilsmeier/sqinn-go)   | -      | -    | A solution without CGO. It uses [github.com/cvilsmeier/sqinn](https://github.com/cvilsmeier/sqinn) to access SQLite database files. |
-| zombie   | [github.com/zombiezen/go-sqlite](https://github.com/zombiezen/go-sqlite)   | -      | -    | A pure-Go rewrite of the crawshaw driver, using the modernc libraries. |
+| Name     | Repository                                                                 | db/sql | cgo   | published  | Remarks |
+| :---     | :---                                                                       | :---   | :---  | :---       | :---    |
+| bvinc    | [github.com/bvinc/go-sqlite-lite](https://github.com/bvinc/go-sqlite-lite) | no     | yes   | 2019-05-02 |         |
+| craw     | [github.com/crawshaw/sqlite](https://github.com/crawshaw/sqlite)           | no     | yes   | 2020-06-07 |         |
+| eaton    | [github.com/eatonphil/gosqlite](https://github.com/eatonphil/gosqlite)     | no     | yes   | 2024-08-11 | (addded by @c4rlo) |
+| glebarez | [github.com/glebarez/go-sqlite](https://github.com/glebarez/go-sqlite)     | yes    | no    | 2023-12-26 | Based on the modernc libraries (added by @dcarbone) |
+| mattn    | [github.com/mattn/go-sqlite3](https://github.com/mattn/go-sqlite3)         | yes    | yes   | 2026-03-16 | This library is (still) the de-facto standard and widely used. |
+| modernc  | [modernc.org/sqlite](https://modernc.org/sqlite)                           | yes    | no    | 2026-03-17 | A pure Go solution, based on the SQLite C code transpiled to Go. |
+| ncruces  | [github.com/ncruces/go-sqlite3](https://github.com/ncruces/go-sqlite3)     | yes    | no    | 2026-03-21 | A pure Go solution based on SQLite's WASM build and wazero. |
+| sqinn    | [github.com/cvilsmeier/sqinn-go](https://github.com/cvilsmeier/sqinn-go)   | no     | no    | 2026-03-18 | A solution without CGO. It uses [github.com/cvilsmeier/sqinn](https://github.com/cvilsmeier/sqinn) to access SQLite database files. |
+| zombie   | [github.com/zombiezen/go-sqlite](https://github.com/zombiezen/go-sqlite)   | no     | no    | 2025-05-23 | A pure-Go rewrite of the crawshaw driver, using the modernc libraries. |
 
 The test setup is as follows:
 
-- OS: Debian/GNU Linux amd64 version 12.11
+- OS: Debian/GNU Linux amd64 version 12.13
 - CPU: 11th Gen Intel(R) Core(TM) i7-1165G7 @ 2.80GHz, 8 cores
 - RAM: 32GB
 - Disk: 1TB NVME SSD
-- go version go1.24.5 linux/amd64
+- go version go1.26.0 linux/amd64
 
-The benchmark was run on 2025-08-17, with current library versions,
+The benchmark was run on 2026-03-23, with current library versions,
 see go.mod file. Each test was run twice. The better result was then
 recorded. This is not very scientific.
 
@@ -97,15 +97,15 @@ Then query all users once.
 ![](results/simple.png)
 
     Simple;      insert;  query;
-    bvinc;         1140;    574;
-    craw;          1173;    501;
-    eaton;         1107;    631;
-    glebarez;      5131;    761;
-    mattn;         1531;   1018;
-    modernc;       5288;    760;
-    ncruces;       3046;    910;
-    sqinn;          717;    247;
-    zombie;        1791;    264;
+    bvinc;         1021;    438;
+    craw;          1035;    429;
+    eaton;         1010;    511;
+    glebarez;      5162;    749;
+    mattn;         1480;    871;
+    modernc;       2419;    758;
+    ncruces;       2719;    850;
+    sqinn;          645;    242;
+    zombie;        1746;    263;
 
 
 ### Real
@@ -118,15 +118,15 @@ This benchmark is used to simulate real-world use cases.
 ![](results/real.png)
 
     Real;      insert;  query;
-    bvinc;       1166;     75;
-    craw;        1212;     58;
-    eaton;       1107;     80;
-    glebarez;    1673;    134;
-    mattn;       1416;    120;
-    modernc;     1641;    130;
-    ncruces;     1364;    127;
-    sqinn;       1236;     48;
-    zombie;      1762;     59;
+    bvinc;       1230;     61;
+    craw;        1258;     45;
+    eaton;       1188;     70;
+    glebarez;    1815;    129;
+    mattn;       1586;    104;
+    modernc;     1759;    130;
+    ncruces;     1469;    129;
+    sqinn;       1239;     51;
+    zombie;      1892;     59;
 
 
 ### Complex
@@ -139,15 +139,15 @@ Then query all users, articles and comments in one big JOIN statement.
 ![](results/complex.png)
 
     Complex;     insert;  query;
-    bvinc;          701;    692;
-    craw;           699;    595;
-    eaton;          686;    756;
-    glebarez;      2918;   1093;
-    mattn;          843;   1187;
-    modernc;       2909;   1100;
-    ncruces;       1834;   1211;
-    sqinn;          457;    292;
-    zombie;        1286;    481;
+    bvinc;          672;    558;
+    craw;           647;    476;
+    eaton;          646;    653;
+    glebarez;      2814;   1075;
+    mattn;          812;    998;
+    modernc;       1554;   1068;
+    ncruces;       1749;   1263;
+    sqinn;          475;    258;
+    zombie;        1270;    488;
 
 
 ### Many
@@ -159,15 +159,15 @@ This benchmark is used to simluate a read-heavy use case.
 ![](results/many.png)
 
     Many;        query/N=10; query/N=100; query/N=1000;
-    bvinc;               15;          66;          532;
-    craw;                13;          59;          499;
-    eaton;               24;          77;          584;
-    glebarez;            29;          90;          723;
-    mattn;               30;         111;         1000;
-    modernc;             30;          91;          736;
-    ncruces;             40;         116;          965;
-    sqinn;               40;          58;          339;
-    zombie;              15;          34;          218;
+    bvinc;               23;          56;          415;
+    craw;                12;          46;          380;
+    eaton;               22;          62;          451;
+    glebarez;            21;          86;          702;
+    mattn;               20;          96;          819;
+    modernc;             31;          87;          692;
+    ncruces;             33;         103;          837;
+    sqinn;               29;          51;          320;
+    zombie;              16;          34;          267;
 
 
 ### Large
@@ -179,15 +179,15 @@ This benchmark is used to simluate reading of large (gigabytes) databases.
 ![](results/large.png)
 
     Large;       query/N=50000; query/N=100000; query/N=200000;
-    bvinc;                 149;            303;            560;
-    craw;                  167;            296;            574;
-    eaton;                 138;            227;            450;
-    glebarez;              404;            664;           1160;
-    mattn;                 131;            238;            449;
-    modernc;               387;            674;           1116;
-    ncruces;               171;            341;            648;
-    sqinn;                 292;            507;           1074;
-    zombie;                335;            591;           1000;
+    bvinc;                 178;            289;            531;
+    craw;                  187;            304;            535;
+    eaton;                 133;            226;            499;
+    glebarez;              406;            717;           1129;
+    mattn;                 122;            207;            376;
+    modernc;               401;            629;           1094;
+    ncruces;               151;            287;            528;
+    sqinn;                 285;            544;           1132;
+    zombie;                329;            561;            952;
 
 
 ### Concurrent
@@ -199,15 +199,15 @@ This benchmark is used to simulate concurrent reads.
 ![](results/concurrent.png)
 
     Concurrent;  query/N=2; query/N=4; query/N=8;
-    bvinc;             686;       915;      1729;
-    craw;              586;       869;      1633;
-    eaton;             714;      1015;      1924;
-    glebarez;          856;      1182;      2177;
-    mattn;            1149;      1478;      2830;
-    modernc;           870;      1170;      2139;
-    ncruces;           982;      1300;      2516;
-    sqinn;             481;       668;      1224;
-    zombie;            323;       557;      1050;
+    bvinc;             508;       795;      1526;
+    craw;              514;       783;      1398;
+    eaton;             633;       887;      1637;
+    glebarez;          803;      1192;      2105;
+    mattn;             948;      1237;      2395;
+    modernc;           850;      1190;      2061;
+    ncruces;           981;      1261;      2355;
+    sqinn;             394;       700;      1273;
+    zombie;            311;       556;      1033;
 
 
 Summary

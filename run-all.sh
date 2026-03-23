@@ -23,5 +23,5 @@ date
 
 # for collecting results, run like this:
 #
-# $ ./run-all.sh > results/out.txt
+#    ./run-all.sh  | tee results/out.txt
 
